@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
         <meta charset="utf-8" />
-        <title>Bloggy le Blog - Categories</title>
+        <title>Bloggy le Blog - misc</title>
         <link rel="stylesheet" href="https://yoyonel.github.io/theme/css/main.css" />
         <link href="https://yoyonel.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Bloggy le Blog Atom Feed" />
 </head>
@@ -11,13 +11,39 @@
         <header id="banner" class="body">
                 <h1><a href="https://yoyonel.github.io/">Bloggy le Blog </a></h1>
                 <nav><ul>
-                    <li><a href="https://yoyonel.github.io/category/misc.html">misc</a></li>
+                    <li class="active"><a href="https://yoyonel.github.io/category/misc.html">misc</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
-    <h1>Categories on Bloggy le Blog</h1>
-    <ul>
-        <li><a href="https://yoyonel.github.io/category/misc.html">misc</a> (1)</li>
-    </ul>
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="https://yoyonel.github.io/hello-world-en-python.html">"Hello World" en Python</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2020-01-06T00:00:00+01:00">
+                Published: lun. 06 janvier 2020
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://yoyonel.github.io/author/yoyonel.html">YoYoNeL</a>
+        </address>
+<p>In <a href="https://yoyonel.github.io/category/misc.html">misc</a>.</p>
+<p>tags: <a href="https://yoyonel.github.io/tag/python.html">Python</a> </p>
+</footer><!-- /.post-info --><hr>
+<h1>Comment afficher "Hello World!" en Python</h1>
+<h2>Code source</h2>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">helloworld</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">helloworld</span><span class="p">()</span>
+</pre></div>
+
+
+<h2>Résultats</h2>
+<div class="highlight"><pre><span></span>╰─ <span class="nb">echo</span> <span class="s2">&quot;def helloworld():\n\tprint(&#39;Hello World!&#39;)\n\nif __name__ == &#39;__main__&#39;:\n\thelloworld()&quot;</span> <span class="p">|</span> python
+Hello World!
+</pre></div>                </article>
+            </aside><!-- /#featured -->
         <section id="extras" class="body">
                 <div class="blogroll">
                         <h2>links</h2>
