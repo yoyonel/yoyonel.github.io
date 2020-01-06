@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
         <meta charset="utf-8" />
-        <title>"Hello World" en Python</title>
+        <title>Plan - Posts dans le future - Développement</title>
         <link rel="stylesheet" href="https://yoyonel.github.io/theme/css/main.css" />
         <link href="https://yoyonel.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Bloggy le Blog Atom Feed" />
 
@@ -15,9 +15,9 @@
         <header id="banner" class="body">
                 <h1><a href="https://yoyonel.github.io/">Bloggy le Blog </a></h1>
                 <nav><ul>
-                    <li><a href="https://yoyonel.github.io/category/developpement.html">Développement</a></li>
+                    <li class="active"><a href="https://yoyonel.github.io/category/developpement.html">Développement</a></li>
                     <li><a href="https://yoyonel.github.io/category/hobbies.html">Hobbies</a></li>
-                    <li class="active"><a href="https://yoyonel.github.io/category/misc.html">misc</a></li>
+                    <li><a href="https://yoyonel.github.io/category/misc.html">misc</a></li>
                 </ul>
                 </nav>
         </header><!-- /#banner -->
@@ -25,29 +25,103 @@
   <article>
     <header>
       <h1 class="entry-title">
-        <a href="https://yoyonel.github.io/hello-world-en-python.html" rel="bookmark"
-           title="Permalink to "Hello World" en Python">"Hello World" en Python</a></h1>
+        <a href="https://yoyonel.github.io/plan-posts-dans-le-future-developpement.html" rel="bookmark"
+           title="Permalink to Plan - Posts dans le future - Développement">Plan - Posts dans le future - Développement</a></h1>
     </header>
 
     <div class="entry-content">
 <footer class="post-info">
         <span>Mon 06 January 2020</span>
-<span>| tags: <a href="https://yoyonel.github.io/tag/python.html">Python</a></span>
+<span>| tags: <a href="https://yoyonel.github.io/tag/blog.html">Blog</a><a href="https://yoyonel.github.io/tag/futur.html">Futur</a><a href="https://yoyonel.github.io/tag/plan.html">Plan</a><a href="https://yoyonel.github.io/tag/developpement.html">Développement</a></span>
 </footer><!-- /.post-info -->      <hr>
-<h1>Comment afficher "Hello World!" en Python</h1>
-<h2>Code source</h2>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">helloworld</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">helloworld</span><span class="p">()</span>
-</pre></div>
-
-
-<h2>Résultats</h2>
-<div class="highlight"><pre><span></span>╰─ <span class="nb">echo</span> <span class="s2">&quot;def helloworld():\n\tprint(&#39;Hello World!&#39;)\n\nif __name__ == &#39;__main__&#39;:\n\thelloworld()&quot;</span> <span class="p">|</span> python
-Hello World!
-</pre></div>
+<h1>Développement -&gt; Plan: Futur posts, thèmes, sujets à aborder</h1>
+<hr>
+<h2>Python</h2>
+<ul>
+<li>Traitements ASYNChrones<ul>
+<li>asyncio</li>
+<li>uvloops</li>
+</ul>
+</li>
+<li>Multi-processing/threading vs GIL</li>
+<li>Python: nouvelles fonctionnalités (&gt;= 3.8)</li>
+<li>Distributions de tâches/(micro-)services<ul>
+<li>gRPC</li>
+<li>Celery</li>
+<li>RabbitMQ</li>
+<li>ZeroMQ</li>
+</ul>
+</li>
+<li>Web<ul>
+<li>FastAPI<ul>
+<li>Starlette</li>
+<li>Uvicorn</li>
+</ul>
+</li>
+<li>Tornado</li>
+<li>Flask</li>
+<li>Pelican ^^</li>
+</ul>
+</li>
+<li>Databases<ul>
+<li>MongoDB</li>
+<li>PostgreSQL<ul>
+<li>PostGIS</li>
+</ul>
+</li>
+<li>ElasticSearch</li>
+<li>Redis</li>
+</ul>
+</li>
+<li>UX/UI<ul>
+<li>(Py)Qt</li>
+<li>Kivy</li>
+</ul>
+</li>
+<li>Coeur/noyau Python<ul>
+<li>C(P)ython: moteur Python</li>
+<li>Décompilation - OP codes</li>
+<li>Gestion de la mémoire</li>
+<li>GIL: Global Interpreter Lock</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>Technologies/Infra/DevOps</h2>
+<ul>
+<li>Docker/Docker-Compose</li>
+<li>Kubernetes</li>
+<li>Vagrant/VirtualBox</li>
+<li>Ansible</li>
+<li>RaspBerryPi</li>
+<li>NAS Synology<ul>
+<li>Web Apps</li>
+<li>Cross-compilation</li>
+<li>Toolchains/Toolkit</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>C++</h2>
+<ul>
+<li>C++ Moderne: C++17, C++20<ul>
+<li>Lambda-calcul</li>
+</ul>
+</li>
+<li>Programmation fonctionnelle</li>
+<li>Programmation concurrente</li>
+<li>gRPC -&gt; Micro-Services</li>
+<li>Qt</li>
+<li>FFMPEG -&gt; Décodage MPEG/DIVX, ...</li>
+</ul>
+<hr>
+<h2>GoLang</h2>
+<ul>
+<li>gRPC</li>
+<li>Traitements concurrents</li>
+<li>Web/HTTP server</li>
+<li>Traitements vidéos (FFMPEG, traitements de signaux)</li>
+</ul>
     </div><!-- /.entry-content -->
 
   </article>
