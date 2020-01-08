@@ -132,4 +132,20 @@
 &lt;li&gt;Traitements concurrents&lt;/li&gt;
 &lt;li&gt;Web/HTTP server&lt;/li&gt;
 &lt;li&gt;Traitements vidéos (FFMPEG, traitements de signaux)&lt;/li&gt;
-&lt;/ul&gt;</content><category term="Développement"></category><category term="Blog"></category><category term="Futur"></category><category term="Plan"></category><category term="Développement"></category></entry></feed>
+&lt;/ul&gt;</content><category term="Développement"></category><category term="Blog"></category><category term="Futur"></category><category term="Plan"></category><category term="Développement"></category></entry><entry><title>"Hello World" en Python</title><link href="https://yoyonel.github.io/hello-world-en-python.html" rel="alternate"></link><published>2020-01-06T00:00:00+01:00</published><updated>2020-01-06T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/hello-world-en-python.html</id><content type="html">&lt;h1&gt;Comment afficher "Hello World!" en Python&lt;/h1&gt;
+&lt;h2&gt;Code source&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;helloworld&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Hello World!&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="vm"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;__main__&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;helloworld&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2&gt;Résultats&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;╰─ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;def helloworld():\n\tprint(&amp;#39;Hello World!&amp;#39;)\n\nif __name__ == &amp;#39;__main__&amp;#39;:\n\thelloworld()&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; python
+Hello World!
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;asciinema-player src="https://yoyonel.github.io/python-helloworld-ascii.cast" rows=10 poster="npt:0:10" title="Shell record de l'exécution d'un HelloWorld en Python" author="Bloggy" author-img-url=https://cdn.fbsbx.com/v/t59.2708-21/54258800_595054434302598_3189230714423869440_n.gif?_nc_cat=109&amp;_nc_ohc=KQZcBpE9TsMAX9qb-Uh&amp;_nc_ht=cdn.fbsbx.com&amp;oh=4f4cd59722decd795b5be98137602c4f&amp;oe=5E174CC2&gt;&lt;/asciinema-player&gt;&lt;/p&gt;</content><category term="Développement"></category><category term="Python"></category></entry></feed>

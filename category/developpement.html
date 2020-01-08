@@ -1,26 +1,30 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-        <meta charset="utf-8" />
-        <title>💻🎸🎞️ Bloggy le Blog 🎦🎼🖥️ - Développement</title>
-        <link rel="stylesheet" href="https://yoyonel.github.io/theme/css/main.css" />
-        <link href="https://yoyonel.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="💻🎸🎞️ Bloggy le Blog 🎦🎼🖥️ Atom Feed" />
 
-        <!--[if IE]>
+<head>
+    <meta charset="utf-8" />
+    <title>💻🎸🎞️ Bloggy le Blog 🎦🎼🖥️ - Développement</title>
+    <link rel="stylesheet" href="https://yoyonel.github.io/theme/css/main.css" />
+    <link href="https://yoyonel.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
+        title="💻🎸🎞️ Bloggy le Blog 🎦🎼🖥️ Atom Feed" />
+
+    <!--[if IE]>
             <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
         <![endif]-->
 </head>
 
 <body id="index" class="home">
-        <header id="banner" class="body">
-                <h1><a href="https://yoyonel.github.io/">💻🎸🎞️ Bloggy le Blog 🎦🎼🖥️ </a></h1>
-                <nav><ul>
-                    <li class="active"><a href="https://yoyonel.github.io/category/developpement.html">Développement</a></li>
-                    <li><a href="https://yoyonel.github.io/category/hobbies.html">Hobbies</a></li>
-                    <li><a href="https://yoyonel.github.io/category/misc.html">misc</a></li>
-                </ul>
-                </nav>
-        </header><!-- /#banner -->
+    <header id="banner" class="body">
+        <h1><a href="https://yoyonel.github.io/">💻🎸🎞️ Bloggy le Blog 🎦🎼🖥️ </a></h1>
+        <nav>
+            <ul>
+                    <li class="active" ><a
+                            href="https://yoyonel.github.io/category/developpement.html">Développement</a></li>
+                    <li><a
+                            href="https://yoyonel.github.io/category/hobbies.html">Hobbies</a></li>
+            </ul>
+        </nav>
+    </header><!-- /#banner -->
 
             <aside id="featured" class="body">
                 <article>
@@ -117,35 +121,72 @@
 <li>Web/HTTP server</li>
 <li>Traitements vidéos (FFMPEG, traitements de signaux)</li>
 </ul><p><a href="https://yoyonel.github.io/plan-posts-dans-le-future-developpement.html#disqus_thread">comments</a></p>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://yoyonel.github.io/hello-world-en-python.html" rel="bookmark"
+                           title="Permalink to "Hello World" en Python">"Hello World" en Python</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <span>Mon 06 January 2020</span>
+<span>| tags: <a href="https://yoyonel.github.io/tag/python.html">Python</a></span>
+</footer><!-- /.post-info -->                <h1>Comment afficher "Hello World!" en Python</h1>
+<h2>Code source</h2>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">helloworld</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">helloworld</span><span class="p">()</span>
+</pre></div>
+
+
+<h2>Résultats</h2>
+<div class="highlight"><pre><span></span>╰─ <span class="nb">echo</span> <span class="s2">&quot;def helloworld():\n\tprint(&#39;Hello World!&#39;)\n\nif __name__ == &#39;__main__&#39;:\n\thelloworld()&quot;</span> <span class="p">|</span> python
+Hello World!
+</pre></div>
+
+
+<p><asciinema-player src="https://yoyonel.github.io/python-helloworld-ascii.cast" rows=10 poster="npt:0:10" title="Shell record de l'exécution d'un HelloWorld en Python" author="Bloggy" author-img-url=https://cdn.fbsbx.com/v/t59.2708-21/54258800_595054434302598_3189230714423869440_n.gif?_nc_cat=109&_nc_ohc=KQZcBpE9TsMAX9qb-Uh&_nc_ht=cdn.fbsbx.com&oh=4f4cd59722decd795b5be98137602c4f&oe=5E174CC2></asciinema-player></p>
+                <a class="readmore" href="https://yoyonel.github.io/hello-world-en-python.html">read more</a>
+<p><a href="https://yoyonel.github.io/hello-world-en-python.html#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+            </ol><!-- /#posts-list -->
 <p class="paginator">
     Page 1 / 1
 </p>
-            </aside><!-- /#featured -->
-            </ol><!-- /#posts-list -->
             </section><!-- /#content -->
-        <section id="extras" class="body">
-                <div class="blogroll">
-                        <h2>blogroll</h2>
-                        <ul>
-                            <li><a href="http://getpelican.com/">Pelican</a></li>
-                            <li><a href="http://python.org/">Python.org</a></li>
-                            <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
-                        </ul>
-                </div><!-- /.blogroll -->
-                <div class="social">
-                        <h2>social</h2>
-                        <ul>
-                            <li><a href="https://yoyonel.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+    <section id="extras" class="body">
+        <div class="blogroll">
+            <h2>blogroll</h2>
+            <ul>
+                <li><a href="http://getpelican.com/">Pelican</a></li>
+                <li><a href="http://python.org/">Python.org</a></li>
+                <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
+            </ul>
+        </div><!-- /.blogroll -->
+        <div class="social">
+            <h2>social</h2>
+            <ul>
+                <li><a href="https://yoyonel.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom
+                        feed</a></li>
 
-                            <li><a href="https://twitter.com/RenellYoyonel">Twitter</a></li>
-                            <li><a href="https://github.com/yoyonel">Github</a></li>
-                        </ul>
-                </div><!-- /.social -->
-        </section><!-- /#extras -->
+                <li><a href="https://twitter.com/RenellYoyonel">Twitter</a></li>
+                <li><a href="https://github.com/yoyonel">Github</a></li>
+            </ul>
+        </div><!-- /.social -->
+    </section><!-- /#extras -->
 
-        <footer id="contentinfo" class="body">
-                <p>Powered by <a href="http://getpelican.com/">Pelican</a>. Theme <a href="https://github.com/blueicefield/pelican-blueidea/">blueidea</a>, inspired by the default theme.</p>
-        </footer><!-- /#contentinfo -->
+    <footer id="contentinfo" class="body">
+        <p>Powered by <a href="http://getpelican.com/">Pelican</a>. Theme <a
+                href="https://github.com/blueicefield/pelican-blueidea/">blueidea</a>, inspired by the default theme.
+        </p>
+    </footer><!-- /#contentinfo -->
 
     <script type="text/javascript">
     var _gaq = _gaq || [];
@@ -166,5 +207,7 @@
         (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
     }());
 </script>
+
 </body>
+
 </html>
