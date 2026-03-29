@@ -1,0 +1,1041 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Bloggy le Blog</title><link href="https://yoyonel.github.io/en/" rel="alternate"/><link href="https://yoyonel.github.io/feeds/all.atom.xml" rel="self"/><id>https://yoyonel.github.io/en/</id><updated>2026-03-29T00:00:00+01:00</updated><subtitle>💻🎸🎞️ Dev, music &amp; tinkering 🎦🎼🖥️</subtitle><entry><title>Modernizing a Pelican Blog in 2026 — Architecture, Stack &amp; CI/CD</title><link href="https://yoyonel.github.io/en/modernisation-blog-pelican-2026.html" rel="alternate"/><published>2026-03-29T00:00:00+01:00</published><updated>2026-03-29T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2026-03-29:/en/modernisation-blog-pelican-2026.html</id><summary type="html">&lt;h1&gt;Modernizing a Pelican Blog in 2026&lt;/h1&gt;
+&lt;p&gt;This blog has been around since 2020. It was built with a stack that worked back then, but didn't age well: an unpinned &lt;code&gt;requirements.txt&lt;/code&gt;, 6 shell scripts, a Pelican-generated &lt;code&gt;Makefile&lt;/code&gt;, abandoned third-party plugins, a theme from 2013, and fully manual deployment.&lt;/p&gt;
+&lt;p&gt;Here's the …&lt;/p&gt;</summary><content type="html">&lt;h1&gt;Modernizing a Pelican Blog in 2026&lt;/h1&gt;
+&lt;p&gt;This blog has been around since 2020. It was built with a stack that worked back then, but didn't age well: an unpinned &lt;code&gt;requirements.txt&lt;/code&gt;, 6 shell scripts, a Pelican-generated &lt;code&gt;Makefile&lt;/code&gt;, abandoned third-party plugins, a theme from 2013, and fully manual deployment.&lt;/p&gt;
+&lt;p&gt;Here's the full story of its modernization.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;The Starting Point (Before)&lt;/h2&gt;
+&lt;p&gt;The project suffered from several issues:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Problem&lt;/th&gt;
+&lt;th&gt;Details&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Dependencies&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;requirements.txt&lt;/code&gt; with 3 lines (&lt;code&gt;pelican&lt;/code&gt;, &lt;code&gt;Markdown&lt;/code&gt;, &lt;code&gt;punch.py&lt;/code&gt;), no pinned versions&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Scripts&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;6 shell scripts (&lt;code&gt;setup.sh&lt;/code&gt;, &lt;code&gt;deploy.sh&lt;/code&gt;, &lt;code&gt;publish.sh&lt;/code&gt;, &lt;code&gt;release.sh&lt;/code&gt;, &lt;code&gt;add_extras_*.sh&lt;/code&gt;)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Structure&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Content nested in &lt;code&gt;pelican/content/&lt;/code&gt;, config in &lt;code&gt;pelican/&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Plugins&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;pelican-css&lt;/code&gt; and &lt;code&gt;pelican-js&lt;/code&gt; (third-party repos on notabug.org, unmaintained)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Theme&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;blueidea-custom — 2013 CSS, not responsive, fixed width, Trebuchet MS font&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Deployment&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Manual: &lt;code&gt;make publish&lt;/code&gt; → copy to a &lt;code&gt;deploy/&lt;/code&gt; folder → &lt;code&gt;git push&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Versioning&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;punch.py&lt;/code&gt; for managing a version number (useless for a blog)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Workflow&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;git-flow (overkill for a personal blog)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h2&gt;The New Stack&lt;/h2&gt;
+&lt;h3&gt;Python: &lt;code&gt;uv&lt;/code&gt; Instead of pip/poetry&lt;/h3&gt;
+&lt;p&gt;&lt;a href="https://docs.astral.sh/uv/"&gt;uv&lt;/a&gt; is a Python package manager written in Rust — fast and all-in-one. It replaces &lt;code&gt;pip&lt;/code&gt;, &lt;code&gt;pip-tools&lt;/code&gt;, &lt;code&gt;virtualenv&lt;/code&gt;, and &lt;code&gt;poetry&lt;/code&gt; with a single tool.&lt;/p&gt;
+&lt;p&gt;The minimal &lt;code&gt;pyproject.toml&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;[project]&lt;/span&gt;
+&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;blog-source&amp;quot;&lt;/span&gt;
+&lt;span class="n"&gt;version&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;1.0.0&amp;quot;&lt;/span&gt;
+&lt;span class="n"&gt;description&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Bloggy le Blog - Technical blog with Pelican&amp;quot;&lt;/span&gt;
+&lt;span class="n"&gt;requires-python&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;gt;=3.10&amp;quot;&lt;/span&gt;
+&lt;span class="n"&gt;dependencies&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;pelican[markdown]&amp;gt;=4.9&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;ghp-import&amp;gt;=2.1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;One-command install:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;uv&lt;span class="w"&gt; &lt;/span&gt;sync&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;# Creates the venv, resolves dependencies, installs everything&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;On a GitHub Actions runner, &lt;code&gt;uv sync&lt;/code&gt; takes &lt;strong&gt;~2 seconds&lt;/strong&gt; vs 15-30s with pip.&lt;/p&gt;
+&lt;h3&gt;Task Runner: &lt;code&gt;Justfile&lt;/code&gt; Instead of Make + Shell Scripts&lt;/h3&gt;
+&lt;p&gt;&lt;a href="https://github.com/casey/just"&gt;just&lt;/a&gt; is a modern command runner (written in Rust) that replaces &lt;code&gt;make&lt;/code&gt; for project tasks. Unlike Make, it has no file dependency system — it's just a command launcher with clean syntax.&lt;/p&gt;
+&lt;p&gt;The complete project &lt;code&gt;Justfile&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nb"&gt;set&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dotenv&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;load&lt;/span&gt;
+&lt;span class="nb"&gt;set&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;positional&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;arguments&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Show available recipes&lt;/span&gt;
+&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nd"&gt;@just&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nb"&gt;list&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Install dependencies and setup theme&lt;/span&gt;
+&lt;span class="n"&gt;setup&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;uv&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sync&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;git&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;submodule&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;update&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="n"&gt;init&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="n"&gt;recursive&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Start dev server with live-reload&lt;/span&gt;
+&lt;span class="n"&gt;dev&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;port&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;8000&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;uv&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pelican&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;o&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pelicanconf&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;lr&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;port&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}}&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Build for production&lt;/span&gt;
+&lt;span class="n"&gt;publish&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;uv&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pelican&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;o&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;publishconf&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Deploy to GitHub Pages&lt;/span&gt;
+&lt;span class="n"&gt;deploy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;publish&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;uv&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ghp&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nn"&gt;output&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;deploy&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;f&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The advantage over 6 independent shell scripts: &lt;strong&gt;a single entry point&lt;/strong&gt;, self-documenting (&lt;code&gt;just --list&lt;/code&gt;), with named parameters and default values.&lt;/p&gt;
+&lt;h3&gt;Theme: Flex&lt;/h3&gt;
+&lt;p&gt;&lt;a href="https://github.com/alexandrevicenzi/Flex"&gt;Flex&lt;/a&gt; is the most popular and actively maintained Pelican theme. It provides:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Responsive&lt;/strong&gt; mobile-first design&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Dark mode&lt;/strong&gt; auto-detect (follows the OS &lt;code&gt;prefers-color-scheme&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Syntax highlighting&lt;/strong&gt; with Pygments (separate light/dark themes)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;SEO&lt;/strong&gt;: OpenGraph tags, meta description&lt;/li&gt;
+&lt;li&gt;Configuration via Python variables in &lt;code&gt;pelicanconf.py&lt;/code&gt;:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;THEME&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;themes/Flex&amp;quot;&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Dark mode auto-detect&lt;/span&gt;
+&lt;span class="n"&gt;THEME_COLOR_AUTO_DETECT_BROWSER_PREFERENCE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;
+&lt;span class="n"&gt;THEME_COLOR_ENABLE_USER_OVERRIDE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Syntax highlighting&lt;/span&gt;
+&lt;span class="n"&gt;PYGMENTS_STYLE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;github&amp;quot;&lt;/span&gt;         &lt;span class="c1"&gt;# light theme&lt;/span&gt;
+&lt;span class="n"&gt;PYGMENTS_STYLE_DARK&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;monokai&amp;quot;&lt;/span&gt;   &lt;span class="c1"&gt;# dark theme&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The theme is integrated as a &lt;strong&gt;git submodule&lt;/strong&gt;, allowing independent updates and a clean history.&lt;/p&gt;
+&lt;h3&gt;Local Plugin: &lt;code&gt;css_js_injector&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;The old &lt;code&gt;pelican-css&lt;/code&gt; and &lt;code&gt;pelican-js&lt;/code&gt; plugins (third-party repos) used fragile hacks with magic constants to inject CSS/JS into templates. They are no longer maintained.&lt;/p&gt;
+&lt;p&gt;The replacement fits in &lt;strong&gt;~40 lines of Python&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;re&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;pelican&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;signals&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;inject_css_js&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;endswith&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;.html&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt;
+
+    &lt;span class="n"&gt;article&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;article&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;or&lt;/span&gt; &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;page&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;article&lt;/span&gt; &lt;span class="ow"&gt;is&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt;
+
+    &lt;span class="n"&gt;siteurl&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;SITEURL&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;css_meta&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;getattr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;article&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;css&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;js_meta&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;getattr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;article&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;js&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="n"&gt;css_meta&lt;/span&gt; &lt;span class="ow"&gt;and&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="n"&gt;js_meta&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt;
+
+    &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;r&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;encoding&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;utf-8&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;content&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;css_meta&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;css_meta&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;,&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="n"&gt;tag&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;siteurl&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;/css/&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;strip&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;&amp;quot; type=&amp;quot;text/css&amp;quot;&amp;gt;&amp;#39;&lt;/span&gt;
+            &lt;span class="n"&gt;content&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;lt;/head&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;tag&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;lt;/head&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;js_meta&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;entry&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;js_meta&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;,&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="n"&gt;entry&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;entry&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;strip&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;(top)&amp;quot;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;entry&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="n"&gt;fname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;entry&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;(top)&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;strip&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+                &lt;span class="n"&gt;tag&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;lt;script src=&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;siteurl&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;/js/&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;fname&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;&amp;#39;&lt;/span&gt;
+                &lt;span class="n"&gt;content&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;re&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sub&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;r&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;(&amp;lt;body[^&amp;gt;]*&amp;gt;)&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="sa"&gt;rf&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;\1\n&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;tag&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="n"&gt;fname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;entry&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;(bottom)&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;strip&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+                &lt;span class="n"&gt;tag&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;lt;script src=&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;siteurl&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;/js/&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;fname&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;&amp;#39;&lt;/span&gt;
+                &lt;span class="n"&gt;content&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;lt;/body&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;tag&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;lt;/body&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;w&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;encoding&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;utf-8&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;register&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="n"&gt;signals&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;content_written&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;inject_css_js&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;How it works: Pelican emits a &lt;code&gt;content_written&lt;/code&gt; signal after generating each HTML file. The plugin intercepts this signal, reads the &lt;code&gt;CSS&lt;/code&gt; and &lt;code&gt;JS&lt;/code&gt; metadata from the article, and injects &lt;code&gt;&amp;lt;link&amp;gt;&lt;/code&gt; / &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; tags at the right locations in the HTML.&lt;/p&gt;
+&lt;p&gt;Usage in an article:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;---
+title: My article
+CSS: asciinema-player.css
+&lt;span class="gu"&gt;JS: asciinema-player.js (top)&lt;/span&gt;
+&lt;span class="gu"&gt;---&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;A technical note: the &lt;code&gt;&amp;lt;body&amp;gt;&lt;/code&gt; replacement requires a regex (&lt;code&gt;&amp;lt;body[^&amp;gt;]*&amp;gt;&lt;/code&gt;) because themes add attributes (&lt;code&gt;class&lt;/code&gt;, &lt;code&gt;id&lt;/code&gt;) to the body tag.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;CI/CD: GitHub Actions&lt;/h2&gt;
+&lt;h3&gt;Automatic Deployment&lt;/h3&gt;
+&lt;p&gt;Every push to &lt;code&gt;master&lt;/code&gt; triggers a build + deploy:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;Deploy Blog&lt;/span&gt;
+&lt;span class="nt"&gt;on&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nt"&gt;push&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;branches&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p p-Indicator"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;master&lt;/span&gt;&lt;span class="p p-Indicator"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;main&lt;/span&gt;&lt;span class="p p-Indicator"&gt;]&lt;/span&gt;
+
+&lt;span class="nt"&gt;jobs&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nt"&gt;build-deploy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;runs-on&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;ubuntu-latest&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;steps&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p p-Indicator"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;uses&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;actions/checkout@v4&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nt"&gt;with&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nt"&gt;submodules&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;recursive&lt;/span&gt;
+
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p p-Indicator"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;uses&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;astral-sh/setup-uv@v4&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p p-Indicator"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;run&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;uv sync&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p p-Indicator"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;run&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;uv run pelican content -o output -s publishconf.py&lt;/span&gt;
+
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p p-Indicator"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;uses&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;JamesIves/github-pages-deploy-action@v4&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nt"&gt;with&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nt"&gt;repository-name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;yoyonel/yoyonel.github.io&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nt"&gt;branch&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;master&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nt"&gt;folder&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;output&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nt"&gt;ssh-key&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;${{ secrets.DEPLOY_KEY }}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Total pipeline time: &lt;strong&gt;~25 seconds&lt;/strong&gt; (including ~15s for submodule checkout).&lt;/p&gt;
+&lt;h3&gt;PR Preview on surge.sh&lt;/h3&gt;
+&lt;p&gt;Every Pull Request automatically generates a preview on &lt;a href="https://surge.sh/"&gt;surge.sh&lt;/a&gt; with a bot comment containing the URL:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;🚀 Preview deployed!
+https://blog-source-pr-1.surge.sh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The workflow uses a &lt;code&gt;PELICAN_SITEURL&lt;/code&gt; environment variable to override the production &lt;code&gt;SITEURL&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;# publishconf.py&lt;/span&gt;
+&lt;span class="n"&gt;SITEURL&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;environ&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;PELICAN_SITEURL&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;https://yoyonel.github.io&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This allows the same &lt;code&gt;publishconf.py&lt;/code&gt; to serve both production and previews, without duplicating configuration.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Final Project Structure&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;├── .github/workflows/
+│   ├── deploy.yml          # Deploy on push to master
+│   └── preview.yml         # PR preview via surge.sh
+├── content/
+│   ├── css/                # Custom CSS (static assets)
+│   ├── js/                 # Custom JS
+│   └── *.md                # Markdown articles
+├── plugins/
+│   └── css_js_injector.py  # Local CSS/JS plugin
+├── themes/
+│   └── Flex/               # Theme (git submodule)
+├── Justfile                # Single entry point
+├── pelicanconf.py          # Dev config
+├── publishconf.py          # Production config
+└── pyproject.toml          # Python dependencies
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Compared to before: &lt;strong&gt;11 config/script files&lt;/strong&gt; reduced to &lt;strong&gt;4&lt;/strong&gt; (&lt;code&gt;pyproject.toml&lt;/code&gt;, &lt;code&gt;pelicanconf.py&lt;/code&gt;, &lt;code&gt;publishconf.py&lt;/code&gt;, &lt;code&gt;Justfile&lt;/code&gt;).&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Day-to-Day Workflow&lt;/h2&gt;
+&lt;p&gt;Writing an article:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;just&lt;span class="w"&gt; &lt;/span&gt;new-post&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;My Awesome Article&amp;quot;&lt;/span&gt;
+just&lt;span class="w"&gt; &lt;/span&gt;dev
+&lt;span class="c1"&gt;# → http://localhost:8000 with live-reload&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Publishing:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git&lt;span class="w"&gt; &lt;/span&gt;add&lt;span class="w"&gt; &lt;/span&gt;content/my-awesome-article.md
+git&lt;span class="w"&gt; &lt;/span&gt;commit&lt;span class="w"&gt; &lt;/span&gt;-m&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;article: my awesome article&amp;quot;&lt;/span&gt;
+git&lt;span class="w"&gt; &lt;/span&gt;push
+&lt;span class="c1"&gt;# → GitHub Actions builds + deploys automatically&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;That's it. No &lt;code&gt;make publish &amp;amp;&amp;amp; cd deploy &amp;amp;&amp;amp; git add . &amp;amp;&amp;amp; git commit &amp;amp;&amp;amp; git push&lt;/code&gt;. No manually activating a virtualenv. No installing the theme into the venv. The blog deploys in &lt;strong&gt;25 seconds&lt;/strong&gt; on every push.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Reproducing This Stack&lt;/h2&gt;
+&lt;p&gt;To build a similar blog from scratch:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Pelican&lt;/strong&gt; + &lt;strong&gt;Markdown&lt;/strong&gt;: the static blog engine&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;uv&lt;/strong&gt;: Python dependency management&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;just&lt;/strong&gt;: task runner&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Flex&lt;/strong&gt;: responsive theme with dark mode&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;GitHub Actions&lt;/strong&gt; + &lt;strong&gt;JamesIves/github-pages-deploy-action&lt;/strong&gt;: CI/CD&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;surge.sh&lt;/strong&gt;: PR preview&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Everything is open source: &lt;a href="https://github.com/yoyonel/blog_source"&gt;yoyonel/blog_source&lt;/a&gt;.&lt;/p&gt;</content><category term="Development"/><category term="Pelican"/><category term="Python"/><category term="GitHub Actions"/><category term="CI/CD"/><category term="uv"/><category term="Justfile"/><category term="Blog"/></entry><entry><title>Moderniser un blog Pelican en 2026 — Architecture, Stack &amp; CI/CD</title><link href="https://yoyonel.github.io/modernisation-blog-pelican-2026.html" rel="alternate"/><published>2026-03-29T00:00:00+01:00</published><updated>2026-03-29T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2026-03-29:/modernisation-blog-pelican-2026.html</id><summary type="html">&lt;h1&gt;Moderniser un blog Pelican en 2026&lt;/h1&gt;
+&lt;p&gt;Ce blog existe depuis 2020. Il a été construit à l'époque avec une stack qui fonctionnait, mais qui n'a pas bien vieilli : &lt;code&gt;requirements.txt&lt;/code&gt; sans versions pinées, 6 scripts shell, un &lt;code&gt;Makefile&lt;/code&gt; généré par Pelican, des plugins tiers abandonnés, un thème datant de 2013 …&lt;/p&gt;</summary><content type="html">&lt;h1&gt;Moderniser un blog Pelican en 2026&lt;/h1&gt;
+&lt;p&gt;Ce blog existe depuis 2020. Il a été construit à l'époque avec une stack qui fonctionnait, mais qui n'a pas bien vieilli : &lt;code&gt;requirements.txt&lt;/code&gt; sans versions pinées, 6 scripts shell, un &lt;code&gt;Makefile&lt;/code&gt; généré par Pelican, des plugins tiers abandonnés, un thème datant de 2013, et un déploiement entièrement manuel.&lt;/p&gt;
+&lt;p&gt;Voici le retour d'expérience sur sa modernisation complète.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;L'état des lieux (avant)&lt;/h2&gt;
+&lt;p&gt;Le projet souffrait de plusieurs problèmes :&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Problème&lt;/th&gt;
+&lt;th&gt;Détail&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Dépendances&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;requirements.txt&lt;/code&gt; avec 3 lignes (&lt;code&gt;pelican&lt;/code&gt;, &lt;code&gt;Markdown&lt;/code&gt;, &lt;code&gt;punch.py&lt;/code&gt;), aucune version pinée&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Scripts&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;6 scripts shell (&lt;code&gt;setup.sh&lt;/code&gt;, &lt;code&gt;deploy.sh&lt;/code&gt;, &lt;code&gt;publish.sh&lt;/code&gt;, &lt;code&gt;release.sh&lt;/code&gt;, &lt;code&gt;add_extras_*.sh&lt;/code&gt;)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Structure&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Contenu imbriqué dans &lt;code&gt;pelican/content/&lt;/code&gt;, config dans &lt;code&gt;pelican/&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Plugins&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;pelican-css&lt;/code&gt; et &lt;code&gt;pelican-js&lt;/code&gt; (repos tiers sur notabug.org, plus maintenus)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Thème&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;blueidea-custom — CSS de 2013, pas responsive, largeur fixe, police Trebuchet MS&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Déploiement&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Manuel : &lt;code&gt;make publish&lt;/code&gt; → copie dans un dossier &lt;code&gt;deploy/&lt;/code&gt; → &lt;code&gt;git push&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Versioning&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;punch.py&lt;/code&gt; pour gérer un numéro de version (inutile pour un blog)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Workflow&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;git-flow (overkill pour un blog personnel)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h2&gt;La nouvelle stack&lt;/h2&gt;
+&lt;h3&gt;Python : &lt;code&gt;uv&lt;/code&gt; au lieu de pip/poetry&lt;/h3&gt;
+&lt;p&gt;&lt;a href="https://docs.astral.sh/uv/"&gt;uv&lt;/a&gt; est un gestionnaire de paquets Python écrit en Rust, rapide et tout-en-un. Il remplace &lt;code&gt;pip&lt;/code&gt;, &lt;code&gt;pip-tools&lt;/code&gt;, &lt;code&gt;virtualenv&lt;/code&gt; et &lt;code&gt;poetry&lt;/code&gt; avec un seul outil.&lt;/p&gt;
+&lt;p&gt;Le fichier &lt;code&gt;pyproject.toml&lt;/code&gt; minimal :&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;[project]&lt;/span&gt;
+&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;blog-source&amp;quot;&lt;/span&gt;
+&lt;span class="n"&gt;version&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;1.0.0&amp;quot;&lt;/span&gt;
+&lt;span class="n"&gt;description&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Bloggy le Blog - Blog technique avec Pelican&amp;quot;&lt;/span&gt;
+&lt;span class="n"&gt;requires-python&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;gt;=3.10&amp;quot;&lt;/span&gt;
+&lt;span class="n"&gt;dependencies&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;pelican[markdown]&amp;gt;=4.9&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;ghp-import&amp;gt;=2.1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Installation en une commande :&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;uv&lt;span class="w"&gt; &lt;/span&gt;sync&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;# Crée le venv, résout les dépendances, installe tout&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Sur un runner GitHub Actions, &lt;code&gt;uv sync&lt;/code&gt; prend &lt;strong&gt;~2 secondes&lt;/strong&gt; contre 15-30s avec pip.&lt;/p&gt;
+&lt;h3&gt;Task runner : &lt;code&gt;Justfile&lt;/code&gt; au lieu de Make + scripts shell&lt;/h3&gt;
+&lt;p&gt;&lt;a href="https://github.com/casey/just"&gt;just&lt;/a&gt; est un command runner moderne (écrit en Rust) qui remplace &lt;code&gt;make&lt;/code&gt; pour les tâches de projet. Contrairement à Make, il n'a pas de système de dépendances de fichiers — c'est juste un lanceur de commandes avec une syntaxe propre.&lt;/p&gt;
+&lt;p&gt;Le &lt;code&gt;Justfile&lt;/code&gt; complet du projet :&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nb"&gt;set&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dotenv&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;load&lt;/span&gt;
+&lt;span class="nb"&gt;set&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;positional&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;arguments&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Show available recipes&lt;/span&gt;
+&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nd"&gt;@just&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nb"&gt;list&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Install dependencies and setup theme&lt;/span&gt;
+&lt;span class="n"&gt;setup&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;uv&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sync&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;git&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;submodule&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;update&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="n"&gt;init&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="n"&gt;recursive&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Start dev server with live-reload&lt;/span&gt;
+&lt;span class="n"&gt;dev&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;port&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;8000&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;uv&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pelican&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;o&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pelicanconf&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;lr&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;port&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}}&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Build for production&lt;/span&gt;
+&lt;span class="n"&gt;publish&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;uv&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pelican&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;o&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;publishconf&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Deploy to GitHub Pages&lt;/span&gt;
+&lt;span class="n"&gt;deploy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;publish&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;uv&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ghp&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nn"&gt;output&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;deploy&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;f&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;L'avantage par rapport à 6 scripts shell indépendants : &lt;strong&gt;un seul point d'entrée&lt;/strong&gt;, auto-documenté (&lt;code&gt;just --list&lt;/code&gt;), avec des paramètres nommés et des valeurs par défaut.&lt;/p&gt;
+&lt;h3&gt;Thème : Flex&lt;/h3&gt;
+&lt;p&gt;&lt;a href="https://github.com/alexandrevicenzi/Flex"&gt;Flex&lt;/a&gt; est le thème Pelican le plus populaire et maintenu. Il apporte :&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Responsive&lt;/strong&gt; mobile-first&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Dark mode&lt;/strong&gt; automatique (suit &lt;code&gt;prefers-color-scheme&lt;/code&gt; de l'OS)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Syntax highlighting&lt;/strong&gt; avec Pygments (thème light/dark séparé)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;SEO&lt;/strong&gt; : balises OpenGraph, meta description&lt;/li&gt;
+&lt;li&gt;Config via des variables Python dans &lt;code&gt;pelicanconf.py&lt;/code&gt; :&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;THEME&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;themes/Flex&amp;quot;&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Dark mode auto-detect&lt;/span&gt;
+&lt;span class="n"&gt;THEME_COLOR_AUTO_DETECT_BROWSER_PREFERENCE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;
+&lt;span class="n"&gt;THEME_COLOR_ENABLE_USER_OVERRIDE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Syntax highlighting&lt;/span&gt;
+&lt;span class="n"&gt;PYGMENTS_STYLE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;github&amp;quot;&lt;/span&gt;         &lt;span class="c1"&gt;# thème clair&lt;/span&gt;
+&lt;span class="n"&gt;PYGMENTS_STYLE_DARK&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;monokai&amp;quot;&lt;/span&gt;   &lt;span class="c1"&gt;# thème sombre&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Le thème est intégré comme &lt;strong&gt;git submodule&lt;/strong&gt;, ce qui permet de le mettre à jour indépendamment et de garder un historique propre.&lt;/p&gt;
+&lt;h3&gt;Plugin local : &lt;code&gt;css_js_injector&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;Les anciens plugins &lt;code&gt;pelican-css&lt;/code&gt; et &lt;code&gt;pelican-js&lt;/code&gt; (repos tiers) utilisaient des hacks fragiles avec des constantes magiques pour injecter du CSS/JS dans les templates. Ils ne sont plus maintenus.&lt;/p&gt;
+&lt;p&gt;Le remplacement tient en &lt;strong&gt;~40 lignes de Python&lt;/strong&gt; :&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;re&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;pelican&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;signals&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;inject_css_js&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;endswith&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;.html&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt;
+
+    &lt;span class="n"&gt;article&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;article&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;or&lt;/span&gt; &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;page&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;article&lt;/span&gt; &lt;span class="ow"&gt;is&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt;
+
+    &lt;span class="n"&gt;siteurl&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;SITEURL&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;css_meta&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;getattr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;article&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;css&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;js_meta&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;getattr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;article&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;js&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="n"&gt;css_meta&lt;/span&gt; &lt;span class="ow"&gt;and&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="n"&gt;js_meta&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt;
+
+    &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;r&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;encoding&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;utf-8&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;content&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;css_meta&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;css_meta&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;,&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="n"&gt;tag&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;siteurl&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;/css/&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;strip&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;&amp;quot; type=&amp;quot;text/css&amp;quot;&amp;gt;&amp;#39;&lt;/span&gt;
+            &lt;span class="n"&gt;content&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;lt;/head&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;tag&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;lt;/head&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;js_meta&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;entry&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;js_meta&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;,&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="n"&gt;entry&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;entry&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;strip&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;(top)&amp;quot;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;entry&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="n"&gt;fname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;entry&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;(top)&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;strip&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+                &lt;span class="n"&gt;tag&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;lt;script src=&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;siteurl&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;/js/&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;fname&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;&amp;#39;&lt;/span&gt;
+                &lt;span class="n"&gt;content&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;re&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sub&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;r&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;(&amp;lt;body[^&amp;gt;]*&amp;gt;)&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="sa"&gt;rf&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;\1\n&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;tag&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="n"&gt;fname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;entry&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;(bottom)&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;strip&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+                &lt;span class="n"&gt;tag&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;lt;script src=&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;siteurl&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;/js/&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;fname&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;&amp;#39;&lt;/span&gt;
+                &lt;span class="n"&gt;content&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;lt;/body&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;tag&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;lt;/body&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;w&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;encoding&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;utf-8&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;register&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="n"&gt;signals&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;content_written&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;inject_css_js&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Le principe : Pelican émet un signal &lt;code&gt;content_written&lt;/code&gt; après avoir généré chaque fichier HTML. Le plugin intercepte ce signal, lit les metadata &lt;code&gt;CSS&lt;/code&gt; et &lt;code&gt;JS&lt;/code&gt; de l'article, et injecte les balises &lt;code&gt;&amp;lt;link&amp;gt;&lt;/code&gt; / &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; aux bons endroits dans le HTML.&lt;/p&gt;
+&lt;p&gt;Utilisation dans un article :&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;---
+title: Mon article
+CSS: asciinema-player.css
+&lt;span class="gu"&gt;JS: asciinema-player.js (top)&lt;/span&gt;
+&lt;span class="gu"&gt;---&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Un point technique à noter : le remplacement de &lt;code&gt;&amp;lt;body&amp;gt;&lt;/code&gt; nécessite une regex (&lt;code&gt;&amp;lt;body[^&amp;gt;]*&amp;gt;&lt;/code&gt;) car les thèmes ajoutent des attributs (&lt;code&gt;class&lt;/code&gt;, &lt;code&gt;id&lt;/code&gt;) sur la balise.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;CI/CD : GitHub Actions&lt;/h2&gt;
+&lt;h3&gt;Déploiement automatique&lt;/h3&gt;
+&lt;p&gt;Chaque push sur &lt;code&gt;master&lt;/code&gt; déclenche un build + deploy :&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;Deploy Blog&lt;/span&gt;
+&lt;span class="nt"&gt;on&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nt"&gt;push&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;branches&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p p-Indicator"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;master&lt;/span&gt;&lt;span class="p p-Indicator"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;main&lt;/span&gt;&lt;span class="p p-Indicator"&gt;]&lt;/span&gt;
+
+&lt;span class="nt"&gt;jobs&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nt"&gt;build-deploy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;runs-on&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;ubuntu-latest&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;steps&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p p-Indicator"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;uses&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;actions/checkout@v4&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nt"&gt;with&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nt"&gt;submodules&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;recursive&lt;/span&gt;
+
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p p-Indicator"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;uses&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;astral-sh/setup-uv@v4&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p p-Indicator"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;run&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;uv sync&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p p-Indicator"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;run&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;uv run pelican content -o output -s publishconf.py&lt;/span&gt;
+
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p p-Indicator"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;uses&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;JamesIves/github-pages-deploy-action@v4&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nt"&gt;with&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nt"&gt;repository-name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;yoyonel/yoyonel.github.io&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nt"&gt;branch&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;master&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nt"&gt;folder&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;output&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nt"&gt;ssh-key&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;${{ secrets.DEPLOY_KEY }}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Le temps total du pipeline : &lt;strong&gt;~25 secondes&lt;/strong&gt; (dont ~15s pour le checkout des submodules).&lt;/p&gt;
+&lt;h3&gt;Preview de PR sur surge.sh&lt;/h3&gt;
+&lt;p&gt;Chaque Pull Request génère automatiquement une preview sur &lt;a href="https://surge.sh/"&gt;surge.sh&lt;/a&gt; avec un commentaire bot contenant l'URL :&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;🚀 Preview deployed!
+https://blog-source-pr-1.surge.sh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Le workflow utilise une variable d'environnement &lt;code&gt;PELICAN_SITEURL&lt;/code&gt; pour overrider le &lt;code&gt;SITEURL&lt;/code&gt; de production :&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;# publishconf.py&lt;/span&gt;
+&lt;span class="n"&gt;SITEURL&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;environ&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;PELICAN_SITEURL&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;https://yoyonel.github.io&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Cela permet au même &lt;code&gt;publishconf.py&lt;/code&gt; de servir à la fois pour la production et pour les previews, sans duplication de configuration.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Structure finale du projet&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;├── .github/workflows/
+│   ├── deploy.yml          # Deploy sur push master
+│   └── preview.yml         # Preview PR via surge.sh
+├── content/
+│   ├── css/                # CSS custom (assets statiques)
+│   ├── js/                 # JS custom
+│   └── *.md                # Articles en Markdown
+├── plugins/
+│   └── css_js_injector.py  # Plugin CSS/JS local
+├── themes/
+│   └── Flex/               # Thème (git submodule)
+├── Justfile                # Point d&amp;#39;entrée unique
+├── pelicanconf.py          # Config dev
+├── publishconf.py          # Config production
+└── pyproject.toml          # Dépendances Python
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Comparé à avant : &lt;strong&gt;11 fichiers de config/scripts&lt;/strong&gt; réduits à &lt;strong&gt;4&lt;/strong&gt; (&lt;code&gt;pyproject.toml&lt;/code&gt;, &lt;code&gt;pelicanconf.py&lt;/code&gt;, &lt;code&gt;publishconf.py&lt;/code&gt;, &lt;code&gt;Justfile&lt;/code&gt;).&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Ce que ça donne au quotidien&lt;/h2&gt;
+&lt;p&gt;Écrire un article :&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;just&lt;span class="w"&gt; &lt;/span&gt;new-post&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Mon Super Article&amp;quot;&lt;/span&gt;
+just&lt;span class="w"&gt; &lt;/span&gt;dev
+&lt;span class="c1"&gt;# → http://localhost:8000 avec live-reload&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Publier :&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git&lt;span class="w"&gt; &lt;/span&gt;add&lt;span class="w"&gt; &lt;/span&gt;content/mon-super-article.md
+git&lt;span class="w"&gt; &lt;/span&gt;commit&lt;span class="w"&gt; &lt;/span&gt;-m&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;article: mon super article&amp;quot;&lt;/span&gt;
+git&lt;span class="w"&gt; &lt;/span&gt;push
+&lt;span class="c1"&gt;# → GitHub Actions build + deploy automatiquement&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;C'est tout. Pas de &lt;code&gt;make publish &amp;amp;&amp;amp; cd deploy &amp;amp;&amp;amp; git add . &amp;amp;&amp;amp; git commit &amp;amp;&amp;amp; git push&lt;/code&gt;. Pas de virtualenv à activer manuellement. Pas de thème à installer dans le venv. Le blog se déploie en &lt;strong&gt;25 secondes&lt;/strong&gt; sur chaque push.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Reproduire cette stack&lt;/h2&gt;
+&lt;p&gt;Pour construire un blog similaire from scratch :&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Pelican&lt;/strong&gt; + &lt;strong&gt;Markdown&lt;/strong&gt; : le moteur de blog statique&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;uv&lt;/strong&gt; : gestion des dépendances Python&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;just&lt;/strong&gt; : task runner&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Flex&lt;/strong&gt; : thème responsive avec dark mode&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;GitHub Actions&lt;/strong&gt; + &lt;strong&gt;JamesIves/github-pages-deploy-action&lt;/strong&gt; : CI/CD&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;surge.sh&lt;/strong&gt; : preview de PR&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Le tout est open source : &lt;a href="https://github.com/yoyonel/blog_source"&gt;yoyonel/blog_source&lt;/a&gt;.&lt;/p&gt;</content><category term="Développement"/><category term="Pelican"/><category term="Python"/><category term="GitHub Actions"/><category term="CI/CD"/><category term="uv"/><category term="Justfile"/><category term="Blog"/></entry><entry><title>Python "Hello World" - Repl.it</title><link href="https://yoyonel.github.io/en/python-helloworld-replit.html" rel="alternate"/><published>2020-01-08T00:00:00+01:00</published><updated>2020-01-08T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-08:/en/python-helloworld-replit.html</id><content type="html">&lt;h1&gt;Print "Hello World!" in Python&lt;/h1&gt;
+&lt;iframe height="400px" width="100%" src="https://repl.it/@lionelatty/BadBigTransfer?lite=true" scrolling="no" frameborder="no" allowtransparency="true" allowfullscreen="true" sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-modals"&gt;&lt;/iframe&gt;</content><category term="Development"/><category term="Python"/><category term="Repl.it"/></entry><entry><title>"Hello World" en Python - Repl.it</title><link href="https://yoyonel.github.io/python-helloworld-replit.html" rel="alternate"/><published>2020-01-08T00:00:00+01:00</published><updated>2020-01-08T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-08:/python-helloworld-replit.html</id><content type="html">&lt;h1&gt;Afficher "Hello World!" en Python&lt;/h1&gt;
+&lt;iframe height="400px" width="100%" src="https://repl.it/@lionelatty/BadBigTransfer?lite=true" scrolling="no" frameborder="no" allowtransparency="true" allowfullscreen="true" sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-modals"&gt;&lt;/iframe&gt;</content><category term="Développement"/><category term="Python"/><category term="Repl.it"/></entry><entry><title>PyConFR 2019 (Bordeaux) - gRPC/Python - A practical example of using micro-services for a (mini) text analysis application (NLP).</title><link href="https://yoyonel.github.io/en/pyconfr-2019-grpc-python.html" rel="alternate"/><published>2020-01-07T10:23:16.221000+00:00</published><updated>2020-01-07T10:23:16.221000+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-07:/en/pyconfr-2019-grpc-python.html</id><summary type="html">&lt;h1&gt;Talk: PyConFR 2019 (Bordeaux) - gRPC/Python&lt;/h1&gt;
+&lt;h2&gt;Conference&lt;/h2&gt;
+&lt;p&gt;&lt;img src="https://pbs.twimg.com/media/EIdCkuEWoAAa7EN?format=jpg&amp;name=900x900" width="400"/&gt;&lt;/p&gt;
+&lt;h2&gt;Twitter&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://twitter.com/CotCotCoder/status/1190993831296155650"&gt;Twitter -&amp;gt; #PyconFr2019 Micro-services #gRPC and #Python&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;Program&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://www.pycon.fr/2019/fr/talks/conference.html#grpc%2Fpython%E2%80%AF%3A%20exemple%20pratique%20d%27utilisation%20de%20micro-services%20pour%20une%20%28mini%29%20application%20d%27analyse%20s%C3%A9mantique%20de%20textes%20%28npl%29"&gt;PyConFR 2019 Program&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="PyConFR 2019 Program" src="https://pbs.twimg.com/media/EIcNt-DX0AUKWEc?format=png&amp;amp;name=small"&gt;&lt;/p&gt;
+&lt;h2&gt;Slides&lt;/h2&gt;
+&lt;!-- https://github.com/getpelican/pelican/issues/1099 --&gt;
+&lt;iframe src="https://docs.google.com/presentation/d/e/2PACX-1vR2p5bWr0-vTUEocMcZzLXZtJWOLhwGNWZEoNyc-_xIDR-43CJCgVPr0JpGi9Fb6CV_BTU5ULh4FWEb/embed?start=false&amp;loop=false&amp;delayms=3000" frameborder="0" width="480" height="299" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"&gt;&lt;/iframe&gt;
+
+&lt;h3&gt;What I (tried to) talk about :p&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;SOC → Separation Of Concerns&lt;/li&gt;
+&lt;li&gt;Containerization&lt;/li&gt;
+&lt;li&gt;Distribution&lt;/li&gt;
+&lt;li&gt;Scaling&lt;/li&gt;
+&lt;li&gt;(Explicit) Specification&lt;/li&gt;
+&lt;li&gt;Validation&lt;/li&gt;
+&lt;li&gt;Packaging/Versioning strategy&lt;/li&gt;
+&lt;li&gt;Data/Services workflow&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;What I didn't cover&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Unit tests&lt;ul&gt;
+&lt;li&gt;Pytest&lt;ul&gt;
+&lt;li&gt;gRPC …&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;h1&gt;Talk: PyConFR 2019 (Bordeaux) - gRPC/Python&lt;/h1&gt;
+&lt;h2&gt;Conference&lt;/h2&gt;
+&lt;p&gt;&lt;img src="https://pbs.twimg.com/media/EIdCkuEWoAAa7EN?format=jpg&amp;name=900x900" width="400"/&gt;&lt;/p&gt;
+&lt;h2&gt;Twitter&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://twitter.com/CotCotCoder/status/1190993831296155650"&gt;Twitter -&amp;gt; #PyconFr2019 Micro-services #gRPC and #Python&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;Program&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://www.pycon.fr/2019/fr/talks/conference.html#grpc%2Fpython%E2%80%AF%3A%20exemple%20pratique%20d%27utilisation%20de%20micro-services%20pour%20une%20%28mini%29%20application%20d%27analyse%20s%C3%A9mantique%20de%20textes%20%28npl%29"&gt;PyConFR 2019 Program&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="PyConFR 2019 Program" src="https://pbs.twimg.com/media/EIcNt-DX0AUKWEc?format=png&amp;amp;name=small"&gt;&lt;/p&gt;
+&lt;h2&gt;Slides&lt;/h2&gt;
+&lt;!-- https://github.com/getpelican/pelican/issues/1099 --&gt;
+&lt;iframe src="https://docs.google.com/presentation/d/e/2PACX-1vR2p5bWr0-vTUEocMcZzLXZtJWOLhwGNWZEoNyc-_xIDR-43CJCgVPr0JpGi9Fb6CV_BTU5ULh4FWEb/embed?start=false&amp;loop=false&amp;delayms=3000" frameborder="0" width="480" height="299" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"&gt;&lt;/iframe&gt;
+
+&lt;h3&gt;What I (tried to) talk about :p&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;SOC → Separation Of Concerns&lt;/li&gt;
+&lt;li&gt;Containerization&lt;/li&gt;
+&lt;li&gt;Distribution&lt;/li&gt;
+&lt;li&gt;Scaling&lt;/li&gt;
+&lt;li&gt;(Explicit) Specification&lt;/li&gt;
+&lt;li&gt;Validation&lt;/li&gt;
+&lt;li&gt;Packaging/Versioning strategy&lt;/li&gt;
+&lt;li&gt;Data/Services workflow&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;What I didn't cover&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Unit tests&lt;ul&gt;
+&lt;li&gt;Pytest&lt;ul&gt;
+&lt;li&gt;gRPC&lt;/li&gt;
+&lt;li&gt;MongoDB&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Deployments, Infrastructure&lt;ul&gt;
+&lt;li&gt;Docker/Docker-Compose&lt;/li&gt;
+&lt;li&gt;Makefile&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Monitoring&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Retrospective&lt;/h3&gt;
+&lt;p&gt;This was my first conference as a speaker.&lt;/p&gt;
+&lt;p&gt;My presentation level was fairly average. The content was/is (I think) interesting, and the issues raised are relevant. What wasn't up to standard (I believe) was the oral quality, the narrative level, the accessibility, clarity, and effectiveness of the message I was trying to convey.&lt;/p&gt;
+&lt;p&gt;The conference itself was very interesting — many fascinating topics, great speakers.&lt;/p&gt;
+&lt;p&gt;I participated in several presentation formats:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;short: ~30min&lt;/li&gt;
+&lt;li&gt;long (like my presentation): ~1h&lt;/li&gt;
+&lt;li&gt;workshops: half-day sessions&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The different formats are interesting, and I should probably think more carefully about which format is most appropriate for each topic.&lt;/p&gt;
+&lt;p&gt;In the end, I'm more comfortable writing than speaking. I need to improve my written communication skills (including creating this blog), and organize and prepare much further in advance for conferences and presentations.&lt;/p&gt;
+&lt;p&gt;This will allow me to have and offer more anchor points — more developed, more thought-through, more structured elements to build upon.&lt;/p&gt;
+&lt;p&gt;Going forward, related to this presentation/topic, I'll revisit the elements I wanted to discuss, present them one by one, and develop them on this blog... there's quite a bit of work, but I think it's going to be interesting 😀&lt;/p&gt;</content><category term="Development"/><category term="Python"/><category term="PyConFr"/><category term="gRPC"/><category term="Twitter"/><category term="NLP"/><category term="Talk"/><category term="Intermediate"/></entry><entry><title>PyConFR 2019 (Bordeaux) - gRPC/Python - Exemple pratique d'utilisation de micro-services pour une (mini) application d'analyse sémantiques de textes (NLP).</title><link href="https://yoyonel.github.io/pyconfr-2019-grpc-python.html" rel="alternate"/><published>2020-01-07T10:23:16.221000+00:00</published><updated>2020-01-07T10:23:16.221000+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-07:/pyconfr-2019-grpc-python.html</id><summary type="html">&lt;h1&gt;Présentation: PyConFR 2019 (Bordeaux) - gRPC/Python&lt;/h1&gt;
+&lt;h2&gt;Conférence&lt;/h2&gt;
+&lt;p&gt;&lt;img src="https://pbs.twimg.com/media/EIdCkuEWoAAa7EN?format=jpg&amp;name=900x900" width="400"/&gt;&lt;/p&gt;
+&lt;h2&gt;Twitter&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://twitter.com/CotCotCoder/status/1190993831296155650"&gt;Twitter -&amp;gt; #PyconFr2019 Micro-services #gRPC et #Python&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;Programme&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://www.pycon.fr/2019/fr/talks/conference.html#grpc%2Fpython%E2%80%AF%3A%20exemple%20pratique%20d%27utilisation%20de%20micro-services%20pour%20une%20%28mini%29%20application%20d%27analyse%20s%C3%A9mantique%20de%20textes%20%28npl%29"&gt;Programme PyConFR 2019&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Programme PyConFR 2019" src="https://pbs.twimg.com/media/EIcNt-DX0AUKWEc?format=png&amp;amp;name=small"&gt;&lt;/p&gt;
+&lt;h2&gt;Présentation (supports)&lt;/h2&gt;
+&lt;!-- https://github.com/getpelican/pelican/issues/1099 --&gt;
+&lt;iframe src="https://docs.google.com/presentation/d/e/2PACX-1vR2p5bWr0-vTUEocMcZzLXZtJWOLhwGNWZEoNyc-_xIDR-43CJCgVPr0JpGi9Fb6CV_BTU5ULh4FWEb/embed?start=false&amp;loop=false&amp;delayms=3000" frameborder="0" width="480" height="299" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"&gt;&lt;/iframe&gt;
+
+&lt;h3&gt;Ce dont j'ai (essayé) de parler :p&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;SOC -&amp;gt; Separation Of Concerns&lt;/li&gt;
+&lt;li&gt;Conteneurisation&lt;/li&gt;
+&lt;li&gt;Distributions&lt;/li&gt;
+&lt;li&gt;Mise à l'échelle &lt;/li&gt;
+&lt;li&gt;Spécification (explicite)&lt;/li&gt;
+&lt;li&gt;Validation&lt;/li&gt;
+&lt;li&gt;Packaging/Stratégie de versionnement&lt;/li&gt;
+&lt;li&gt;Data/Services workflow&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Ce dont je n'ai …&lt;/h3&gt;</summary><content type="html">&lt;h1&gt;Présentation: PyConFR 2019 (Bordeaux) - gRPC/Python&lt;/h1&gt;
+&lt;h2&gt;Conférence&lt;/h2&gt;
+&lt;p&gt;&lt;img src="https://pbs.twimg.com/media/EIdCkuEWoAAa7EN?format=jpg&amp;name=900x900" width="400"/&gt;&lt;/p&gt;
+&lt;h2&gt;Twitter&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://twitter.com/CotCotCoder/status/1190993831296155650"&gt;Twitter -&amp;gt; #PyconFr2019 Micro-services #gRPC et #Python&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;Programme&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://www.pycon.fr/2019/fr/talks/conference.html#grpc%2Fpython%E2%80%AF%3A%20exemple%20pratique%20d%27utilisation%20de%20micro-services%20pour%20une%20%28mini%29%20application%20d%27analyse%20s%C3%A9mantique%20de%20textes%20%28npl%29"&gt;Programme PyConFR 2019&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Programme PyConFR 2019" src="https://pbs.twimg.com/media/EIcNt-DX0AUKWEc?format=png&amp;amp;name=small"&gt;&lt;/p&gt;
+&lt;h2&gt;Présentation (supports)&lt;/h2&gt;
+&lt;!-- https://github.com/getpelican/pelican/issues/1099 --&gt;
+&lt;iframe src="https://docs.google.com/presentation/d/e/2PACX-1vR2p5bWr0-vTUEocMcZzLXZtJWOLhwGNWZEoNyc-_xIDR-43CJCgVPr0JpGi9Fb6CV_BTU5ULh4FWEb/embed?start=false&amp;loop=false&amp;delayms=3000" frameborder="0" width="480" height="299" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"&gt;&lt;/iframe&gt;
+
+&lt;h3&gt;Ce dont j'ai (essayé) de parler :p&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;SOC -&amp;gt; Separation Of Concerns&lt;/li&gt;
+&lt;li&gt;Conteneurisation&lt;/li&gt;
+&lt;li&gt;Distributions&lt;/li&gt;
+&lt;li&gt;Mise à l'échelle &lt;/li&gt;
+&lt;li&gt;Spécification (explicite)&lt;/li&gt;
+&lt;li&gt;Validation&lt;/li&gt;
+&lt;li&gt;Packaging/Stratégie de versionnement&lt;/li&gt;
+&lt;li&gt;Data/Services workflow&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Ce dont je n'ai pas parlé&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Tests unitaires&lt;ul&gt;
+&lt;li&gt;Pytest&lt;ul&gt;
+&lt;li&gt;gRPC&lt;/li&gt;
+&lt;li&gt;MongoDB&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Déploiements, Infras&lt;ul&gt;
+&lt;li&gt;Docker/Docker-Compose&lt;/li&gt;
+&lt;li&gt;Makefile&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Monitoring&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Analyses, suites&lt;/h3&gt;
+&lt;p&gt;C'était ma première conférence en tant que participant. &lt;/p&gt;
+&lt;p&gt;Mon niveau de présentation était assez moyen. Le contenu était/est (je pense) intéressant, les problématiques évoquées le sont également. 
+Ce qui n'était pas au niveau (je pense) était la qualité orale, le niveau de narration, l'accessibilité, la clarté, l'efficacité du message que je tentais de passer, transmettre.&lt;/p&gt;
+&lt;p&gt;La conférence était très intéressante, beaucoup de sujets intéressant, de très bons intervenants.&lt;/p&gt;
+&lt;p&gt;J'ai participé à plusieurs formats de présentations: &lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;court: ~ 30min&lt;/li&gt;
+&lt;li&gt;long (comme ma présentation): ~ 1h00&lt;/li&gt;
+&lt;li&gt;des ateliers: en demi-journées&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Les différents modèles sont intéressants, je devrais certainement pls réfléchir sur le format le plus approprié pour la thématique, sujet concernés.&lt;/p&gt;
+&lt;p&gt;Au final, je suis plus à l'aise à l'écrit qu'à l'oral. 
+Je dois augmenter mon niveau de communication écrit (dont la création de ce blog), organiser et préparer beaucoup plus en amont de conférences, présentations ce dont je veux parler. 
+Ca me permettra d'avoir et proposer plus de points d'ancrages, des éléments plus développés, plus réfléchis, plus construits sur lesquelles m'appuyer.&lt;/p&gt;
+&lt;p&gt;Pour la suite, liée à cette présentation/sujet, je vais reprendre les éléments dont je voulais parler, les présenter, un par un et les développer dans ce blog ... il y a pas mal de boulot, mais je pense que ça va être intéressant 😀&lt;/p&gt;</content><category term="Développement"/><category term="Python"/><category term="PyConFr"/><category term="gRPC"/><category term="Twitter"/><category term="NLP"/><category term="Présentation"/><category term="Intermédiaire"/></entry><entry><title>Roadmap - Future Posts - Development</title><link href="https://yoyonel.github.io/en/plan-future-posts-developpement.html" rel="alternate"/><published>2020-01-06T16:25:13.948000+00:00</published><updated>2020-01-06T16:25:13.948000+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/en/plan-future-posts-developpement.html</id><summary type="html">&lt;h1&gt;Development → Roadmap: Future posts, topics to cover&lt;/h1&gt;
+&lt;hr&gt;
+&lt;h2&gt;Python&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;ASYNChronous processing&lt;ul&gt;
+&lt;li&gt;asyncio&lt;/li&gt;
+&lt;li&gt;uvloops&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Multi-processing/threading vs GIL&lt;/li&gt;
+&lt;li&gt;Python: new features (&amp;gt;= 3.8)&lt;/li&gt;
+&lt;li&gt;Task distribution / (micro-)services&lt;ul&gt;
+&lt;li&gt;gRPC&lt;/li&gt;
+&lt;li&gt;Celery&lt;/li&gt;
+&lt;li&gt;RabbitMQ&lt;/li&gt;
+&lt;li&gt;ZeroMQ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Web&lt;ul&gt;
+&lt;li&gt;FastAPI&lt;ul&gt;
+&lt;li&gt;Starlette&lt;/li&gt;
+&lt;li&gt;Uvicorn&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Tornado&lt;/li&gt;
+&lt;li&gt;Flask&lt;/li&gt;
+&lt;li&gt;Pelican ^^&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Databases&lt;ul&gt;
+&lt;li&gt;MongoDB&lt;/li&gt;
+&lt;li&gt;PostgreSQL&lt;ul&gt;
+&lt;li&gt;PostGIS&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ElasticSearch&lt;/li&gt;
+&lt;li&gt;Redis&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;UX/UI&lt;ul&gt;
+&lt;li&gt;(Py)Qt&lt;/li&gt;
+&lt;li&gt;Kivy&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Python core&lt;ul&gt;
+&lt;li&gt;C …&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;h1&gt;Development → Roadmap: Future posts, topics to cover&lt;/h1&gt;
+&lt;hr&gt;
+&lt;h2&gt;Python&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;ASYNChronous processing&lt;ul&gt;
+&lt;li&gt;asyncio&lt;/li&gt;
+&lt;li&gt;uvloops&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Multi-processing/threading vs GIL&lt;/li&gt;
+&lt;li&gt;Python: new features (&amp;gt;= 3.8)&lt;/li&gt;
+&lt;li&gt;Task distribution / (micro-)services&lt;ul&gt;
+&lt;li&gt;gRPC&lt;/li&gt;
+&lt;li&gt;Celery&lt;/li&gt;
+&lt;li&gt;RabbitMQ&lt;/li&gt;
+&lt;li&gt;ZeroMQ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Web&lt;ul&gt;
+&lt;li&gt;FastAPI&lt;ul&gt;
+&lt;li&gt;Starlette&lt;/li&gt;
+&lt;li&gt;Uvicorn&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Tornado&lt;/li&gt;
+&lt;li&gt;Flask&lt;/li&gt;
+&lt;li&gt;Pelican ^^&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Databases&lt;ul&gt;
+&lt;li&gt;MongoDB&lt;/li&gt;
+&lt;li&gt;PostgreSQL&lt;ul&gt;
+&lt;li&gt;PostGIS&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ElasticSearch&lt;/li&gt;
+&lt;li&gt;Redis&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;UX/UI&lt;ul&gt;
+&lt;li&gt;(Py)Qt&lt;/li&gt;
+&lt;li&gt;Kivy&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Python core&lt;ul&gt;
+&lt;li&gt;C(P)ython: Python engine&lt;/li&gt;
+&lt;li&gt;Decompilation - OP codes&lt;/li&gt;
+&lt;li&gt;Memory management&lt;/li&gt;
+&lt;li&gt;GIL: Global Interpreter Lock&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;Tech/Infra/DevOps&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Docker/Docker-Compose&lt;/li&gt;
+&lt;li&gt;Kubernetes&lt;/li&gt;
+&lt;li&gt;Vagrant/VirtualBox&lt;/li&gt;
+&lt;li&gt;Ansible&lt;/li&gt;
+&lt;li&gt;Raspberry Pi&lt;/li&gt;
+&lt;li&gt;Synology NAS&lt;ul&gt;
+&lt;li&gt;Web Apps&lt;/li&gt;
+&lt;li&gt;Cross-compilation&lt;/li&gt;
+&lt;li&gt;Toolchains/Toolkit&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;C++&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Modern C++: C++17, C++20&lt;ul&gt;
+&lt;li&gt;Lambda calculus&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Functional programming&lt;/li&gt;
+&lt;li&gt;Concurrent programming&lt;/li&gt;
+&lt;li&gt;gRPC → Micro-Services&lt;/li&gt;
+&lt;li&gt;Qt&lt;/li&gt;
+&lt;li&gt;FFMPEG → MPEG/DIVX decoding, ...&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;GoLang&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;gRPC&lt;/li&gt;
+&lt;li&gt;Concurrent processing&lt;/li&gt;
+&lt;li&gt;Web/HTTP server&lt;/li&gt;
+&lt;/ul&gt;</content><category term="Development"/><category term="Blog"/><category term="Future"/><category term="Roadmap"/><category term="Development"/></entry><entry><title>Roadmap - Future Posts - Hobbies</title><link href="https://yoyonel.github.io/en/plan-future-posts-hobbies.html" rel="alternate"/><published>2020-01-06T16:25:13.948000+00:00</published><updated>2020-01-06T16:25:13.948000+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/en/plan-future-posts-hobbies.html</id><content type="html">&lt;h1&gt;Hobbies → Roadmap: Future posts, topics to cover&lt;/h1&gt;
+&lt;hr&gt;
+&lt;h2&gt;Music&lt;/h2&gt;
+&lt;p&gt;Present/talk about:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;new sounds/new music&lt;/li&gt;
+&lt;li&gt;older ones ^^&lt;ul&gt;
+&lt;li&gt;presenting styles, genres&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;discovered/appreciated artists/bands.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;Bass&lt;/h2&gt;
+&lt;p&gt;Propose:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;transcriptions/interpretations of covers&lt;/li&gt;
+&lt;li&gt;compositions (maybe ^^)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;Movies/Series/Manga&lt;/h2&gt;
+&lt;p&gt;Present:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Movies&lt;/li&gt;
+&lt;li&gt;Series&lt;/li&gt;
+&lt;li&gt;Manga&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;discovered, enjoyed, recommended.&lt;/p&gt;</content><category term="Hobbies"/><category term="Blog"/><category term="Future"/><category term="Roadmap"/><category term="Hobbies"/></entry><entry><title>Plan - Posts dans le future - Développement</title><link href="https://yoyonel.github.io/plan-future-posts-developpement.html" rel="alternate"/><published>2020-01-06T16:25:13.948000+00:00</published><updated>2020-01-06T16:25:13.948000+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/plan-future-posts-developpement.html</id><summary type="html">&lt;h1&gt;Développement -&amp;gt; Plan: Futur posts, thèmes, sujets à aborder&lt;/h1&gt;
+&lt;hr&gt;
+&lt;h2&gt;Python&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Traitements ASYNChrones&lt;ul&gt;
+&lt;li&gt;asyncio&lt;/li&gt;
+&lt;li&gt;uvloops&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Multi-processing/threading vs GIL&lt;/li&gt;
+&lt;li&gt;Python: nouvelles fonctionnalités (&amp;gt;= 3.8)&lt;/li&gt;
+&lt;li&gt;Distributions de tâches/(micro-)services&lt;ul&gt;
+&lt;li&gt;gRPC&lt;/li&gt;
+&lt;li&gt;Celery&lt;/li&gt;
+&lt;li&gt;RabbitMQ&lt;/li&gt;
+&lt;li&gt;ZeroMQ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Web&lt;ul&gt;
+&lt;li&gt;FastAPI&lt;ul&gt;
+&lt;li&gt;Starlette&lt;/li&gt;
+&lt;li&gt;Uvicorn&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Tornado&lt;/li&gt;
+&lt;li&gt;Flask&lt;/li&gt;
+&lt;li&gt;Pelican ^^&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Databases&lt;ul&gt;
+&lt;li&gt;MongoDB&lt;/li&gt;
+&lt;li&gt;PostgreSQL&lt;ul&gt;
+&lt;li&gt;PostGIS&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ElasticSearch&lt;/li&gt;
+&lt;li&gt;Redis&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;UX/UI&lt;ul&gt;
+&lt;li&gt;(Py)Qt&lt;/li&gt;
+&lt;li&gt;Kivy&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Coeur …&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;h1&gt;Développement -&amp;gt; Plan: Futur posts, thèmes, sujets à aborder&lt;/h1&gt;
+&lt;hr&gt;
+&lt;h2&gt;Python&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Traitements ASYNChrones&lt;ul&gt;
+&lt;li&gt;asyncio&lt;/li&gt;
+&lt;li&gt;uvloops&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Multi-processing/threading vs GIL&lt;/li&gt;
+&lt;li&gt;Python: nouvelles fonctionnalités (&amp;gt;= 3.8)&lt;/li&gt;
+&lt;li&gt;Distributions de tâches/(micro-)services&lt;ul&gt;
+&lt;li&gt;gRPC&lt;/li&gt;
+&lt;li&gt;Celery&lt;/li&gt;
+&lt;li&gt;RabbitMQ&lt;/li&gt;
+&lt;li&gt;ZeroMQ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Web&lt;ul&gt;
+&lt;li&gt;FastAPI&lt;ul&gt;
+&lt;li&gt;Starlette&lt;/li&gt;
+&lt;li&gt;Uvicorn&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Tornado&lt;/li&gt;
+&lt;li&gt;Flask&lt;/li&gt;
+&lt;li&gt;Pelican ^^&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Databases&lt;ul&gt;
+&lt;li&gt;MongoDB&lt;/li&gt;
+&lt;li&gt;PostgreSQL&lt;ul&gt;
+&lt;li&gt;PostGIS&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ElasticSearch&lt;/li&gt;
+&lt;li&gt;Redis&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;UX/UI&lt;ul&gt;
+&lt;li&gt;(Py)Qt&lt;/li&gt;
+&lt;li&gt;Kivy&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Coeur/noyau Python&lt;ul&gt;
+&lt;li&gt;C(P)ython: moteur Python&lt;/li&gt;
+&lt;li&gt;Décompilation - OP codes&lt;/li&gt;
+&lt;li&gt;Gestion de la mémoire&lt;/li&gt;
+&lt;li&gt;GIL: Global Interpreter Lock&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;Technologies/Infra/DevOps&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Docker/Docker-Compose&lt;/li&gt;
+&lt;li&gt;Kubernetes&lt;/li&gt;
+&lt;li&gt;Vagrant/VirtualBox&lt;/li&gt;
+&lt;li&gt;Ansible&lt;/li&gt;
+&lt;li&gt;RaspBerryPi&lt;/li&gt;
+&lt;li&gt;NAS Synology&lt;ul&gt;
+&lt;li&gt;Web Apps&lt;/li&gt;
+&lt;li&gt;Cross-compilation&lt;/li&gt;
+&lt;li&gt;Toolchains/Toolkit&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;C++&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;C++ Moderne: C++17, C++20&lt;ul&gt;
+&lt;li&gt;Lambda-calcul&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Programmation fonctionnelle&lt;/li&gt;
+&lt;li&gt;Programmation concurrente&lt;/li&gt;
+&lt;li&gt;gRPC -&amp;gt; Micro-Services&lt;/li&gt;
+&lt;li&gt;Qt&lt;/li&gt;
+&lt;li&gt;FFMPEG -&amp;gt; Décodage MPEG/DIVX, ...&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;GoLang&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;gRPC&lt;/li&gt;
+&lt;li&gt;Traitements concurrents&lt;/li&gt;
+&lt;li&gt;Web/HTTP server&lt;/li&gt;
+&lt;li&gt;Traitements vidéos (FFMPEG, traitements de signaux)&lt;/li&gt;
+&lt;/ul&gt;</content><category term="Développement"/><category term="Blog"/><category term="Futur"/><category term="Plan"/><category term="Développement"/></entry><entry><title>Plan - Posts dans le future - Hobbies</title><link href="https://yoyonel.github.io/plan-future-posts-hobbies.html" rel="alternate"/><published>2020-01-06T16:25:13.948000+00:00</published><updated>2020-01-06T16:25:13.948000+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/plan-future-posts-hobbies.html</id><content type="html">&lt;h1&gt;Hoobies -&amp;gt; Plan: Futurs posts, thèmes, sujets à aborder&lt;/h1&gt;
+&lt;hr&gt;
+&lt;h2&gt;Musiques&lt;/h2&gt;
+&lt;p&gt;Présenter/parler de:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;nouveaux sons/nouvelles musiques&lt;/li&gt;
+&lt;li&gt;plus anciens ^^&lt;ul&gt;
+&lt;li&gt;présentation de styles, courants&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;des artistes/groupes découverts/appréciés.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;Basse&lt;/h2&gt;
+&lt;p&gt;Proposer des:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;retranscriptions/interprétations de reprises&lt;/li&gt;
+&lt;li&gt;compositions (peut être ^^)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;Films/Séries/Mangas&lt;/h2&gt;
+&lt;p&gt;Présenter des:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Films&lt;/li&gt;
+&lt;li&gt;Séries &lt;/li&gt;
+&lt;li&gt;Mangas &lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;découverts, appréciés, conseillés.&lt;/p&gt;</content><category term="Hobbies"/><category term="Blog"/><category term="Futur"/><category term="Plan"/><category term="Hobbies"/></entry><entry><title>Python "Hello World"</title><link href="https://yoyonel.github.io/en/python-helloworld.html" rel="alternate"/><published>2020-01-06T00:00:00+01:00</published><updated>2020-01-06T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/en/python-helloworld.html</id><content type="html">&lt;h1&gt;How to print "Hello World!" in Python&lt;/h1&gt;
+&lt;h2&gt;Source code&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;helloworld&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Hello World!&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="vm"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;__main__&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;helloworld&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;Output&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;╰─&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;def helloworld():\n\tprint(&amp;#39;Hello World!&amp;#39;)\n\nif __name__ == &amp;#39;__main__&amp;#39;:\n\thelloworld()&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;python
+Hello&lt;span class="w"&gt; &lt;/span&gt;World!
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;asciinema-player src="https://yoyonel.github.io/en/python-helloworld-ascii.cast" rows=10 poster="npt:0:10" title="Shell recording of a Python HelloWorld execution" author="Bloggy" author-img-url=https://cdn.fbsbx.com/v/t59.2708-21/54258800_595054434302598_3189230714423869440_n.gif?_nc_cat=109&amp;_nc_ohc=KQZcBpE9TsMAX9qb-Uh&amp;_nc_ht=cdn.fbsbx.com&amp;oh=4f4cd59722decd795b5be98137602c4f&amp;oe=5E174CC2&gt;&lt;/asciinema-player&gt;&lt;/p&gt;</content><category term="Development"/><category term="Python"/></entry><entry><title>"Hello World" en Python</title><link href="https://yoyonel.github.io/python-helloworld.html" rel="alternate"/><published>2020-01-06T00:00:00+01:00</published><updated>2020-01-06T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/python-helloworld.html</id><content type="html">&lt;h1&gt;Comment afficher "Hello World!" en Python&lt;/h1&gt;
+&lt;h2&gt;Code source&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;helloworld&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Hello World!&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="vm"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;__main__&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;helloworld&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;Résultats&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;╰─&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;def helloworld():\n\tprint(&amp;#39;Hello World!&amp;#39;)\n\nif __name__ == &amp;#39;__main__&amp;#39;:\n\thelloworld()&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;python
+Hello&lt;span class="w"&gt; &lt;/span&gt;World!
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;asciinema-player src="https://yoyonel.github.io/en/python-helloworld-ascii.cast" rows=10 poster="npt:0:10" title="Shell record de l'exécution d'un HelloWorld en Python" author="Bloggy" author-img-url=https://cdn.fbsbx.com/v/t59.2708-21/54258800_595054434302598_3189230714423869440_n.gif?_nc_cat=109&amp;_nc_ohc=KQZcBpE9TsMAX9qb-Uh&amp;_nc_ht=cdn.fbsbx.com&amp;oh=4f4cd59722decd795b5be98137602c4f&amp;oe=5E174CC2&gt;&lt;/asciinema-player&gt;&lt;/p&gt;</content><category term="Développement"/><category term="Python"/></entry></feed>
