@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>💻🎸🎞️ Bloggy le Blog 🎦🎼🖥️</title><link href="https://yoyonel.github.io/" rel="alternate"></link><link href="https://yoyonel.github.io/feeds/all.atom.xml" rel="self"></link><id>https://yoyonel.github.io/</id><updated>2020-01-08T00:00:00+01:00</updated><entry><title>"Hello World" en Python - Repl.it</title><link href="https://yoyonel.github.io/hello-world-en-python-replit.html" rel="alternate"></link><published>2020-01-08T00:00:00+01:00</published><updated>2020-01-08T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-08:/hello-world-en-python-replit.html</id><content type="html">&lt;h1&gt;Afficher "Hello World!" en Python&lt;/h1&gt;
-&lt;iframe height="400px" width="100%" src="https://repl.it/@lionelatty/BadBigTransfer?lite=true" scrolling="no" frameborder="no" allowtransparency="true" allowfullscreen="true" sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-modals"&gt;&lt;/iframe&gt;</content><category term="Développement"></category><category term="Python"></category><category term="Repl.it"></category></entry><entry><title>PyConFR 2019 (Bordeaux) - gRPC/Python - Exemple pratique d'utilisation de micro-services pour une (mini) application d'analyse sémantiques de textes (NLP).</title><link href="https://yoyonel.github.io/pyconfr-2019-bordeaux-grpcpython-exemple-pratique-dutilisation-de-micro-services-pour-une-mini-application-danalyse-semantiques-de-textes-nlp.html" rel="alternate"></link><published>2020-01-07T10:23:16+00:00</published><updated>2020-01-07T10:23:16+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-07:/pyconfr-2019-bordeaux-grpcpython-exemple-pratique-dutilisation-de-micro-services-pour-une-mini-application-danalyse-semantiques-de-textes-nlp.html</id><summary type="html">&lt;hr&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Bloggy le Blog</title><link href="https://yoyonel.github.io/" rel="alternate"/><link href="https://yoyonel.github.io/feeds/all.atom.xml" rel="self"/><id>https://yoyonel.github.io/</id><updated>2020-01-08T00:00:00+01:00</updated><subtitle>💻🎸🎞️ Dev, musique &amp; bidouilles 🎦🎼🖥️</subtitle><entry><title>"Hello World" en Python - Repl.it</title><link href="https://yoyonel.github.io/hello-world-en-python-replit.html" rel="alternate"/><published>2020-01-08T00:00:00+01:00</published><updated>2020-01-08T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-08:/hello-world-en-python-replit.html</id><content type="html">&lt;h1&gt;Afficher "Hello World!" en Python&lt;/h1&gt;
+&lt;iframe height="400px" width="100%" src="https://repl.it/@lionelatty/BadBigTransfer?lite=true" scrolling="no" frameborder="no" allowtransparency="true" allowfullscreen="true" sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-modals"&gt;&lt;/iframe&gt;</content><category term="Développement"/><category term="Python"/><category term="Repl.it"/></entry><entry><title>PyConFR 2019 (Bordeaux) - gRPC/Python - Exemple pratique d'utilisation de micro-services pour une (mini) application d'analyse sémantiques de textes (NLP).</title><link href="https://yoyonel.github.io/pyconfr-2019-bordeaux-grpcpython-exemple-pratique-dutilisation-de-micro-services-pour-une-mini-application-danalyse-semantiques-de-textes-nlp.html" rel="alternate"/><published>2020-01-07T10:23:16.221000+00:00</published><updated>2020-01-07T10:23:16.221000+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-07:/pyconfr-2019-bordeaux-grpcpython-exemple-pratique-dutilisation-de-micro-services-pour-une-mini-application-danalyse-semantiques-de-textes-nlp.html</id><summary type="html">&lt;hr&gt;
 &lt;h1&gt;Présentation: PyConFR 2019 (Bordeaux) - gRPC/Python&lt;/h1&gt;
 &lt;h2&gt;Conférence&lt;/h2&gt;
 &lt;p&gt;&lt;img src="https://pbs.twimg.com/media/EIdCkuEWoAAa7EN?format=jpg&amp;name=900x900" width="400"/&gt;&lt;/p&gt;
@@ -10,8 +10,9 @@
 &lt;p&gt;&lt;a href="https://www.pycon.fr/2019/fr/talks/conference.html#grpc%2Fpython%E2%80%AF%3A%20exemple%20pratique%20d%27utilisation%20de%20micro-services%20pour%20une%20%28mini%29%20application%20d%27analyse%20s%C3%A9mantique%20de%20textes%20%28npl%29"&gt;Programme PyConFR 2019&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Programme PyConFR 2019" src="https://pbs.twimg.com/media/EIcNt-DX0AUKWEc?format=png&amp;amp;name=small"&gt;&lt;/p&gt;
 &lt;h2&gt;Présentation (supports)&lt;/h2&gt;
-&lt;p&gt;&lt;!-- https://github.com/getpelican/pelican/issues/1099 --&gt;
-&lt;iframe src="https://docs.google.com/presentation/d/e/2PACX-1vR2p5bWr0-vTUEocMcZzLXZtJWOLhwGNWZEoNyc-_xIDR-43CJCgVPr0JpGi9Fb6CV_BTU5ULh4FWEb/embed?start=false&amp;loop=false&amp;delayms=3000" frameborder="0" width="480" height="299" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"&gt;&lt;/iframe&gt;&lt;/p&gt;
+&lt;!-- https://github.com/getpelican/pelican/issues/1099 --&gt;
+&lt;iframe src="https://docs.google.com/presentation/d/e/2PACX-1vR2p5bWr0-vTUEocMcZzLXZtJWOLhwGNWZEoNyc-_xIDR-43CJCgVPr0JpGi9Fb6CV_BTU5ULh4FWEb/embed?start=false&amp;loop=false&amp;delayms=3000" frameborder="0" width="480" height="299" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"&gt;&lt;/iframe&gt;
+
 &lt;h3&gt;Ce dont j'ai (essayé) de parler :p&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;SOC -&amp;gt; Separation Of Concerns&lt;/li&gt;
@@ -33,8 +34,9 @@
 &lt;p&gt;&lt;a href="https://www.pycon.fr/2019/fr/talks/conference.html#grpc%2Fpython%E2%80%AF%3A%20exemple%20pratique%20d%27utilisation%20de%20micro-services%20pour%20une%20%28mini%29%20application%20d%27analyse%20s%C3%A9mantique%20de%20textes%20%28npl%29"&gt;Programme PyConFR 2019&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Programme PyConFR 2019" src="https://pbs.twimg.com/media/EIcNt-DX0AUKWEc?format=png&amp;amp;name=small"&gt;&lt;/p&gt;
 &lt;h2&gt;Présentation (supports)&lt;/h2&gt;
-&lt;p&gt;&lt;!-- https://github.com/getpelican/pelican/issues/1099 --&gt;
-&lt;iframe src="https://docs.google.com/presentation/d/e/2PACX-1vR2p5bWr0-vTUEocMcZzLXZtJWOLhwGNWZEoNyc-_xIDR-43CJCgVPr0JpGi9Fb6CV_BTU5ULh4FWEb/embed?start=false&amp;loop=false&amp;delayms=3000" frameborder="0" width="480" height="299" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"&gt;&lt;/iframe&gt;&lt;/p&gt;
+&lt;!-- https://github.com/getpelican/pelican/issues/1099 --&gt;
+&lt;iframe src="https://docs.google.com/presentation/d/e/2PACX-1vR2p5bWr0-vTUEocMcZzLXZtJWOLhwGNWZEoNyc-_xIDR-43CJCgVPr0JpGi9Fb6CV_BTU5ULh4FWEb/embed?start=false&amp;loop=false&amp;delayms=3000" frameborder="0" width="480" height="299" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"&gt;&lt;/iframe&gt;
+
 &lt;h3&gt;Ce dont j'ai (essayé) de parler :p&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;SOC -&amp;gt; Separation Of Concerns&lt;/li&gt;
@@ -78,7 +80,7 @@ Ce qui n'était pas au niveau (je pense) était la qualité orale, le niveau de 
 &lt;p&gt;Au final, je suis plus à l'aise à l'écrit qu'à l'oral. 
 Je dois augmenter mon niveau de communication écrit (dont la création de ce blog), organiser et préparer beaucoup plus en amont de conférences, présentations ce dont je veux parler. 
 Ca me permettra d'avoir et proposer plus de points d'ancrages, des éléments plus développés, plus réfléchis, plus construits sur lesquelles m'appuyer.&lt;/p&gt;
-&lt;p&gt;Pour la suite, liée à cette présentation/sujet, je vais reprendre les éléments dont je voulais parler, les présenter, un par un et les développer dans ce blog ... il y a pas mal de boulot, mais je pense que ça va être intéressant 😀&lt;/p&gt;</content><category term="Développement"></category><category term="Python"></category><category term="PyConFr"></category><category term="gRPC"></category><category term="Twitter"></category><category term="NLP"></category><category term="Présentation"></category><category term="Intermédiaire"></category></entry><entry><title>Plan - Posts dans le future - Développement</title><link href="https://yoyonel.github.io/plan-posts-dans-le-future-developpement.html" rel="alternate"></link><published>2020-01-06T16:25:13+00:00</published><updated>2020-01-06T16:25:13+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/plan-posts-dans-le-future-developpement.html</id><summary type="html">&lt;hr&gt;
+&lt;p&gt;Pour la suite, liée à cette présentation/sujet, je vais reprendre les éléments dont je voulais parler, les présenter, un par un et les développer dans ce blog ... il y a pas mal de boulot, mais je pense que ça va être intéressant 😀&lt;/p&gt;</content><category term="Développement"/><category term="Python"/><category term="PyConFr"/><category term="gRPC"/><category term="Twitter"/><category term="NLP"/><category term="Présentation"/><category term="Intermédiaire"/></entry><entry><title>Plan - Posts dans le future - Développement</title><link href="https://yoyonel.github.io/plan-posts-dans-le-future-developpement.html" rel="alternate"/><published>2020-01-06T16:25:13.948000+00:00</published><updated>2020-01-06T16:25:13.948000+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/plan-posts-dans-le-future-developpement.html</id><summary type="html">&lt;hr&gt;
 &lt;h1&gt;Développement -&amp;gt; Plan: Futur posts, thèmes, sujets à aborder&lt;/h1&gt;
 &lt;hr&gt;
 &lt;h2&gt;Python&lt;/h2&gt;
@@ -211,7 +213,7 @@ Ca me permettra d'avoir et proposer plus de points d'ancrages, des éléments pl
 &lt;li&gt;Traitements concurrents&lt;/li&gt;
 &lt;li&gt;Web/HTTP server&lt;/li&gt;
 &lt;li&gt;Traitements vidéos (FFMPEG, traitements de signaux)&lt;/li&gt;
-&lt;/ul&gt;</content><category term="Développement"></category><category term="Blog"></category><category term="Futur"></category><category term="Plan"></category><category term="Développement"></category></entry><entry><title>Plan - Posts dans le future - Hobbies</title><link href="https://yoyonel.github.io/plan-posts-dans-le-future-hobbies.html" rel="alternate"></link><published>2020-01-06T16:25:13+00:00</published><updated>2020-01-06T16:25:13+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/plan-posts-dans-le-future-hobbies.html</id><content type="html">&lt;hr&gt;
+&lt;/ul&gt;</content><category term="Développement"/><category term="Blog"/><category term="Futur"/><category term="Plan"/><category term="Développement"/></entry><entry><title>Plan - Posts dans le future - Hobbies</title><link href="https://yoyonel.github.io/plan-posts-dans-le-future-hobbies.html" rel="alternate"/><published>2020-01-06T16:25:13.948000+00:00</published><updated>2020-01-06T16:25:13.948000+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/plan-posts-dans-le-future-hobbies.html</id><content type="html">&lt;hr&gt;
 &lt;h1&gt;Hoobies -&amp;gt; Plan: Futurs posts, thèmes, sujets à aborder&lt;/h1&gt;
 &lt;hr&gt;
 &lt;h2&gt;Musiques&lt;/h2&gt;
@@ -239,20 +241,18 @@ Ca me permettra d'avoir et proposer plus de points d'ancrages, des éléments pl
 &lt;li&gt;Séries &lt;/li&gt;
 &lt;li&gt;Mangas &lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;découverts, appréciés, conseillés.&lt;/p&gt;</content><category term="Hobbies"></category><category term="Blog"></category><category term="Futur"></category><category term="Plan"></category><category term="Hobbies"></category></entry><entry><title>"Hello World" en Python</title><link href="https://yoyonel.github.io/hello-world-en-python.html" rel="alternate"></link><published>2020-01-06T00:00:00+01:00</published><updated>2020-01-06T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/hello-world-en-python.html</id><content type="html">&lt;h1&gt;Comment afficher "Hello World!" en Python&lt;/h1&gt;
+&lt;p&gt;découverts, appréciés, conseillés.&lt;/p&gt;</content><category term="Hobbies"/><category term="Blog"/><category term="Futur"/><category term="Plan"/><category term="Hobbies"/></entry><entry><title>"Hello World" en Python</title><link href="https://yoyonel.github.io/hello-world-en-python.html" rel="alternate"/><published>2020-01-06T00:00:00+01:00</published><updated>2020-01-06T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-06:/hello-world-en-python.html</id><content type="html">&lt;h1&gt;Comment afficher "Hello World!" en Python&lt;/h1&gt;
 &lt;h2&gt;Code source&lt;/h2&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;helloworld&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;helloworld&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
     &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Hello World!&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
 &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="vm"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;__main__&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
     &lt;span class="n"&gt;helloworld&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h2&gt;Résultats&lt;/h2&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;╰─ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;def helloworld():\n\tprint(&amp;#39;Hello World!&amp;#39;)\n\nif __name__ == &amp;#39;__main__&amp;#39;:\n\thelloworld()&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; python
-Hello World!
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;╰─&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;def helloworld():\n\tprint(&amp;#39;Hello World!&amp;#39;)\n\nif __name__ == &amp;#39;__main__&amp;#39;:\n\thelloworld()&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;python
+Hello&lt;span class="w"&gt; &lt;/span&gt;World!
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-
-&lt;p&gt;&lt;asciinema-player src="https://yoyonel.github.io/python-helloworld-ascii.cast" rows=10 poster="npt:0:10" title="Shell record de l'exécution d'un HelloWorld en Python" author="Bloggy" author-img-url=https://cdn.fbsbx.com/v/t59.2708-21/54258800_595054434302598_3189230714423869440_n.gif?_nc_cat=109&amp;_nc_ohc=KQZcBpE9TsMAX9qb-Uh&amp;_nc_ht=cdn.fbsbx.com&amp;oh=4f4cd59722decd795b5be98137602c4f&amp;oe=5E174CC2&gt;&lt;/asciinema-player&gt;&lt;/p&gt;</content><category term="Développement"></category><category term="Python"></category></entry></feed>
+&lt;p&gt;&lt;asciinema-player src="https://yoyonel.github.io/python-helloworld-ascii.cast" rows=10 poster="npt:0:10" title="Shell record de l'exécution d'un HelloWorld en Python" author="Bloggy" author-img-url=https://cdn.fbsbx.com/v/t59.2708-21/54258800_595054434302598_3189230714423869440_n.gif?_nc_cat=109&amp;_nc_ohc=KQZcBpE9TsMAX9qb-Uh&amp;_nc_ht=cdn.fbsbx.com&amp;oh=4f4cd59722decd795b5be98137602c4f&amp;oe=5E174CC2&gt;&lt;/asciinema-player&gt;&lt;/p&gt;</content><category term="Développement"/><category term="Python"/></entry></feed>
