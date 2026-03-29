@@ -267,7 +267,1968 @@ git&lt;span class="w"&gt; &lt;/span&gt;push
 &lt;li&gt;&lt;strong&gt;GitHub Actions&lt;/strong&gt; + &lt;strong&gt;JamesIves/github-pages-deploy-action&lt;/strong&gt;: CI/CD&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;surge.sh&lt;/strong&gt;: PR preview&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;Everything is open source: &lt;a href="https://github.com/yoyonel/blog_source"&gt;yoyonel/blog_source&lt;/a&gt;.&lt;/p&gt;</content><category term="Development"/><category term="Pelican"/><category term="Python"/><category term="GitHub Actions"/><category term="CI/CD"/><category term="uv"/><category term="Justfile"/><category term="Blog"/></entry><entry><title>Python "Hello World" - Repl.it</title><link href="https://yoyonel.github.io/en/python-helloworld-replit.html" rel="alternate"/><published>2020-01-08T00:00:00+01:00</published><updated>2020-01-08T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-08:/en/python-helloworld-replit.html</id><content type="html">&lt;h1&gt;Print "Hello World!" in Python&lt;/h1&gt;
+&lt;p&gt;Everything is open source: &lt;a href="https://github.com/yoyonel/blog_source"&gt;yoyonel/blog_source&lt;/a&gt;.&lt;/p&gt;</content><category term="Development"/><category term="Pelican"/><category term="Python"/><category term="GitHub Actions"/><category term="CI/CD"/><category term="uv"/><category term="Justfile"/><category term="Blog"/></entry><entry><title>Anatomy of a Frame — The Complete Lifecycle of suckless-ogl</title><link href="https://yoyonel.github.io/en/suckless-ogl-anatomie-frame.html" rel="alternate"/><published>2026-03-29T00:00:00+01:00</published><updated>2026-03-29T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2026-03-29:/en/suckless-ogl-anatomie-frame.html</id><summary type="html">&lt;h1&gt;Anatomy of a Frame: The Complete Lifecycle of suckless-ogl&lt;/h1&gt;
+&lt;p&gt;&lt;em&gt;From &lt;code&gt;main()&lt;/code&gt; to photons on screen — a full deep-dive into a modern OpenGL &lt;a href="#glossary-pbr" title="Physically-Based Rendering — lighting model that simulates real physics of light"&gt;PBR&lt;/a&gt; engine written in C.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="The final render of suckless-ogl — 100 PBR spheres lit by IBL" src="https://yoyonel.github.io/en/images/suckless-ogl/reference_image.png"&gt;
+&lt;em&gt;&lt;center&gt;The final render: 100 &lt;a href="#glossary-metallic" title="PBR parameter: 0 = dielectric (plastic, wood), 1 = metal (gold, chrome)"&gt;metallic&lt;/a&gt; and &lt;a href="#glossary-dielectric" title="Non-metallic material (plastic, glass, wood) — reflects little at direct angles"&gt;dielectric&lt;/a&gt; spheres, lit by an &lt;a href="#glossary-hdr" title="High Dynamic Range — color values exceeding 1.0 (realistic light intensities)"&gt;HDR&lt;/a&gt; environment map, with full post-processing.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://github.com/yoyonel/suckless-ogl"&gt;&lt;strong&gt;suckless-ogl&lt;/strong&gt;&lt;/a&gt; is a minimalist, high-performance …&lt;/p&gt;</summary><content type="html">&lt;h1&gt;Anatomy of a Frame: The Complete Lifecycle of suckless-ogl&lt;/h1&gt;
+&lt;p&gt;&lt;em&gt;From &lt;code&gt;main()&lt;/code&gt; to photons on screen — a full deep-dive into a modern OpenGL &lt;a href="#glossary-pbr" title="Physically-Based Rendering — lighting model that simulates real physics of light"&gt;PBR&lt;/a&gt; engine written in C.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="The final render of suckless-ogl — 100 PBR spheres lit by IBL" src="https://yoyonel.github.io/en/images/suckless-ogl/reference_image.png"&gt;
+&lt;em&gt;&lt;center&gt;The final render: 100 &lt;a href="#glossary-metallic" title="PBR parameter: 0 = dielectric (plastic, wood), 1 = metal (gold, chrome)"&gt;metallic&lt;/a&gt; and &lt;a href="#glossary-dielectric" title="Non-metallic material (plastic, glass, wood) — reflects little at direct angles"&gt;dielectric&lt;/a&gt; spheres, lit by an &lt;a href="#glossary-hdr" title="High Dynamic Range — color values exceeding 1.0 (realistic light intensities)"&gt;HDR&lt;/a&gt; environment map, with full post-processing.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://github.com/yoyonel/suckless-ogl"&gt;&lt;strong&gt;suckless-ogl&lt;/strong&gt;&lt;/a&gt; is a minimalist, high-performance &lt;a href="#glossary-pbr" title="Physically-Based Rendering — lighting model that simulates real physics of light"&gt;PBR&lt;/a&gt; (Physically-Based Rendering) engine written in &lt;strong&gt;C11&lt;/strong&gt; with &lt;strong&gt;OpenGL 4.4 Core Profile&lt;/strong&gt;. It displays a grid of &lt;strong&gt;100 spheres&lt;/strong&gt; with varied materials (metals, dielectrics, paints, organics…) lit by &lt;strong&gt;Image-Based Lighting&lt;/strong&gt; (&lt;a href="#glossary-ibl" title="Image-Based Lighting — lighting extracted from a panoramic HDR environment image"&gt;IBL&lt;/a&gt;), with a full post-processing pipeline: &lt;a href="#glossary-bloom" title="Glow halo around very bright areas (lens light diffusion)"&gt;bloom&lt;/a&gt;, depth of field, &lt;a href="#glossary-motion-blur" title="Per-pixel motion blur simulating a camera shutter"&gt;motion blur&lt;/a&gt;, &lt;a href="#glossary-fxaa" title="Fast Approximate Anti-Aliasing — fast post-process anti-aliasing on the final image"&gt;FXAA&lt;/a&gt;, tone mapping, &lt;a href="#glossary-color-grading" title="Creative color adjustments (saturation, contrast, gamma, hue)"&gt;color grading&lt;/a&gt;…&lt;/p&gt;
+&lt;p&gt;This article traces the &lt;strong&gt;complete lifecycle&lt;/strong&gt; of the application: from the first byte allocated in &lt;code&gt;main()&lt;/code&gt; to the moment the GPU presents the first fully-lit frame on screen. We'll walk through &lt;strong&gt;every layer&lt;/strong&gt; — CPU memory, GPU resources, the X11/GLFW windowing handshake, OpenGL context creation, &lt;a href="#glossary-shader" title="Program executed directly on the GPU (vertex, fragment, compute)"&gt;shader&lt;/a&gt; compilation, async texture loading, and the multi-pass rendering architecture that produces each frame.&lt;/p&gt;
+&lt;h3&gt;What We'll Cover&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Chapter&lt;/th&gt;
+&lt;th&gt;Topic&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;The entry point (&lt;code&gt;main()&lt;/code&gt;)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Opening a window (GLFW + X11 + OpenGL)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;CPU-side initialization (camera, threads, buffers)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Scene initialization (GPU)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;Post-processing pipeline&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;Async HDR environment loading&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;Progressive IBL generation&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;8&lt;/td&gt;
+&lt;td&gt;The main loop&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;9&lt;/td&gt;
+&lt;td&gt;Rendering a frame&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10&lt;/td&gt;
+&lt;td&gt;Post-processing in detail&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11&lt;/td&gt;
+&lt;td&gt;The first visible frame&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12&lt;/td&gt;
+&lt;td&gt;GPU memory budget&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h2&gt;Chapter 1 — The Entry Point&lt;/h2&gt;
+&lt;p&gt;Everything begins in &lt;code&gt;main()&lt;/code&gt; (&lt;a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/main.c"&gt;src/main.c&lt;/a&gt;):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;argc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[])&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;tracy_manager_init_global&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="c1"&gt;// 1. Profiler bootstrap&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;CliAction&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;action&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cli_handle_args&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;argc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// 2. CLI parsing&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;action&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;CLI_ACTION_EXIT_SUCCESS&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;EXIT_SUCCESS&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;action&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;CLI_ACTION_EXIT_FAILURE&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;EXIT_FAILURE&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// 3. SIMD-aligned allocation of the App structure&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;App&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;App&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="n"&gt;platform_aligned_alloc&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;sizeof&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;App&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SIMD_ALIGNMENT&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;App&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// 4. Full initialization&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;app_init&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;WINDOW_WIDTH&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;WINDOW_HEIGHT&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Icosphere Phong&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app_cleanup&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;platform_aligned_free&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;EXIT_FAILURE&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// 5. Main loop&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;app_run&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// 6. Cleanup&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;app_cleanup&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;platform_aligned_free&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;EXIT_SUCCESS&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The design is &lt;strong&gt;intentionally simple&lt;/strong&gt; — all complexity is encapsulated in &lt;code&gt;app_init()&lt;/code&gt; → &lt;code&gt;app_run()&lt;/code&gt; → &lt;code&gt;app_cleanup()&lt;/code&gt;.&lt;/p&gt;
+&lt;h3&gt;Design Decisions&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Decision&lt;/th&gt;
+&lt;th&gt;Why?&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;SIMD-aligned allocation&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;The &lt;code&gt;App&lt;/code&gt; struct contains &lt;code&gt;mat4&lt;/code&gt;/&lt;code&gt;vec3&lt;/code&gt; fields (via &lt;em&gt;cglm&lt;/em&gt;) that benefit from 16-byte alignment for SSE/NEON vectorization&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Zero-init&lt;/strong&gt; &lt;code&gt;{0}&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Deterministic state — every pointer starts &lt;code&gt;NULL&lt;/code&gt;, every flag starts &lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Tracy first&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;The profiler must be initialized before all other subsystems to capture the full timeline&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Single &lt;code&gt;App&lt;/code&gt; struct&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;All application state lives in one contiguous allocation — cache-friendly, easy to pass around&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class="mermaid"&gt;
+graph TD
+    A["🚀 main()"] --&gt; B["app_init()"]
+    B --&gt; B1["Window + OpenGL Context"]
+    B --&gt; B2["Camera &amp; Input"]
+    B --&gt; B3["Scene — GPU Resources"]
+    B --&gt; B4["Async Loader Thread"]
+    B --&gt; B5["Post-Processing Pipeline"]
+    B --&gt; B6["Profiling Systems"]
+    B1 &amp; B2 &amp; B3 &amp; B4 &amp; B5 &amp; B6 --&gt; C["app_run() — Main Loop"]
+    C --&gt; C1["Poll Events"]
+    C1 --&gt; C2["Camera Physics"]
+    C2 --&gt; C3["renderer_draw_frame()"]
+    C3 --&gt; C4["SwapBuffers"]
+    C4 --&gt;|"next frame"| C1
+    C --&gt; D["app_cleanup()"]
+    D --&gt; E["🏁 End"]
+&lt;/pre&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;Chapter 2 — Opening a Window (GLFW + X11 + OpenGL)&lt;/h2&gt;
+&lt;p&gt;The first real work happens in &lt;code&gt;window_create()&lt;/code&gt; (&lt;a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/window.c"&gt;src/window.c&lt;/a&gt;).&lt;/p&gt;
+&lt;h3&gt;2.1 — GLFW Initialization and Window Hints&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;glfwInit&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="n"&gt;glfwWindowHint&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;GLFW_CONTEXT_VERSION_MAJOR&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="n"&gt;glfwWindowHint&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;GLFW_CONTEXT_VERSION_MINOR&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="c1"&gt;// OpenGL 4.4&lt;/span&gt;
+&lt;span class="n"&gt;glfwWindowHint&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;GLFW_OPENGL_PROFILE&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;GLFW_OPENGL_CORE_PROFILE&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="n"&gt;glfwWindowHint&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;GLFW_OPENGL_DEBUG_CONTEXT&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;GL_TRUE&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="c1"&gt;// Debug messages&lt;/span&gt;
+&lt;span class="n"&gt;glfwWindowHint&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;GLFW_SAMPLES&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;DEFAULT_SAMPLES&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;           &lt;/span&gt;&lt;span class="c1"&gt;// MSAA = 1 (off)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Behind the scenes, &lt;a href="#glossary-glfw" title="C library for creating windows and handling keyboard/mouse input"&gt;GLFW&lt;/a&gt; performs a full &lt;strong&gt;X11 handshake&lt;/strong&gt;:&lt;/p&gt;
+&lt;pre class="mermaid"&gt;
+sequenceDiagram
+    participant App as Application
+    participant GLFW as GLFW
+    participant X11 as X11 Server
+    participant Mesa as Mesa/GPU Driver
+    participant GPU as GPU
+
+    App-&gt;&gt;GLFW: glfwInit()
+    GLFW-&gt;&gt;X11: XOpenDisplay()
+    X11--&gt;&gt;GLFW: Display* (connection)
+
+    App-&gt;&gt;GLFW: glfwCreateWindow(1920, 1080)
+    GLFW-&gt;&gt;X11: XCreateWindow() + GLX setup
+    X11-&gt;&gt;Mesa: glXCreateContextAttribsARB(4.4 Core, Debug)
+    Mesa-&gt;&gt;GPU: Allocate command buffer + context state
+    Mesa--&gt;&gt;X11: GLXContext
+    X11--&gt;&gt;GLFW: Window + Context ready
+
+    App-&gt;&gt;GLFW: glfwMakeContextCurrent()
+    GLFW-&gt;&gt;Mesa: glXMakeCurrent()
+    Mesa-&gt;&gt;GPU: Bind context to calling thread
+&lt;/pre&gt;
+
+&lt;h3&gt;2.2 — GLAD: Loading OpenGL Function Pointers&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;gladLoadGLLoader&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;GLADloadproc&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="n"&gt;glfwGetProcAddress&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;OpenGL is &lt;strong&gt;not a library&lt;/strong&gt; in the traditional sense — it's a &lt;em&gt;specification&lt;/em&gt;. The actual function addresses live inside the GPU driver (&lt;a href="#glossary-mesa" title="Open-source implementation of graphics APIs (OpenGL, Vulkan) on Linux"&gt;Mesa&lt;/a&gt;, NVIDIA, AMD). &lt;a href="#glossary-glad" title="OpenGL loader generator — resolves GL function addresses at runtime"&gt;GLAD&lt;/a&gt; queries each address at runtime via &lt;code&gt;glXGetProcAddress&lt;/code&gt; and populates a function pointer table. After this call, &lt;code&gt;glCreateShader&lt;/code&gt;, &lt;code&gt;glDispatchCompute&lt;/code&gt;, etc. become usable.&lt;/p&gt;
+&lt;h3&gt;2.3 — OpenGL Debug Context&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;setup_opengl_debug&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This enables &lt;code&gt;GL_DEBUG_OUTPUT_SYNCHRONOUS&lt;/code&gt; and registers a callback that intercepts every GL error, warning, and performance hint. A hash table deduplicates messages (log only first occurrence).&lt;/p&gt;
+&lt;h3&gt;2.4 — Input Capture and VSync&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;glfwSwapInterval&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;                    &lt;/span&gt;&lt;span class="c1"&gt;// VSync OFF — unlimited FPS&lt;/span&gt;
+&lt;span class="n"&gt;glfwSetInputMode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;window&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;GLFW_CURSOR&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;GLFW_CURSOR_DISABLED&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// FPS-style&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The cursor is captured in &lt;strong&gt;relative mode&lt;/strong&gt; — mouse movements produce delta offsets for orbit camera control.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Chapter 3 — CPU-Side Initialization&lt;/h2&gt;
+&lt;p&gt;Before touching the GPU, several CPU-side systems are bootstrapped.&lt;/p&gt;
+&lt;h3&gt;3.1 — The Orbit Camera&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;camera_init&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;20.0F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;-90.0F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;0.0F&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The camera starts at:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Distance&lt;/strong&gt;: 20 units from the origin&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Yaw&lt;/strong&gt;: −90° (looking along −Z)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Pitch&lt;/strong&gt;: 0° (horizon level)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;FOV&lt;/strong&gt;: 60° vertical&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Z-clip&lt;/strong&gt;: [0.1, 1000.0]&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;It uses a &lt;strong&gt;fixed-timestep physics model&lt;/strong&gt; (60 Hz) with exponential smoothing for rotation:&lt;/p&gt;
+&lt;pre class="mermaid"&gt;
+graph LR
+    subgraph "Camera Update Pipeline"
+        A["Mouse Delta"] --&gt;|"EMA filter"| B["yaw_target / pitch_target"]
+        B --&gt;|"Lerp α=0.1"| C["yaw / pitch (smoothed)"]
+        C --&gt; D["camera_update_vectors()"]
+        D --&gt; E["front, right, up vectors"]
+        E --&gt; F["View Matrix (lookAt)"]
+    end
+
+    subgraph "Physics (Fixed 60Hz)"
+        G["WASD Keys"] --&gt; H["Target Velocity"]
+        H --&gt;|"acceleration × dt"| I["Current Velocity"]
+        I --&gt;|"friction"| J["Position += vel × dt"]
+        J --&gt; K["Head bobbing (sine wave)"]
+    end
+&lt;/pre&gt;
+
+&lt;h3&gt;3.2 — Async Loader Thread&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;async_loader&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;async_loader_create&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;tracy_mgr&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;A dedicated &lt;strong&gt;POSIX thread&lt;/strong&gt; is spawned for background I/O. It sleeps on a &lt;a href="#glossary-condition-variable" title="Sync mechanism: a thread sleeps until another signals it"&gt;condition variable&lt;/a&gt; (&lt;code&gt;pthread_cond_wait&lt;/code&gt;) until work is queued. This prevents disk reads from stalling the render loop.&lt;/p&gt;
+&lt;pre class="mermaid"&gt;
+stateDiagram-v2
+    [*] --&gt; IDLE
+    IDLE --&gt; PENDING: async_loader_request()
+    PENDING --&gt; LOADING: Worker wakes up
+    LOADING --&gt; WAITING_FOR_PBO: I/O complete, needs GPU buffer
+    WAITING_FOR_PBO --&gt; CONVERTING: Main thread provides PBO
+    CONVERTING --&gt; READY: SIMD Float→Half conversion done
+    READY --&gt; IDLE: Main thread consumes result
+&lt;/pre&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;Chapter 4 — Scene Initialization (The GPU Wakes Up)&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;scene_init()&lt;/code&gt; (&lt;a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/scene.c"&gt;src/scene.c&lt;/a&gt;) is where the GPU gets its first real work.&lt;/p&gt;
+&lt;h3&gt;4.1 — Default Scene State&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;scene&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;subdivisions&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;                     &lt;/span&gt;&lt;span class="c1"&gt;// Icosphere level 3&lt;/span&gt;
+&lt;span class="n"&gt;scene&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;wireframe&lt;/span&gt;&lt;span class="w"&gt;       &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;                     &lt;/span&gt;&lt;span class="c1"&gt;// Solid fill&lt;/span&gt;
+&lt;span class="n"&gt;scene&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;show_envmap&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;                     &lt;/span&gt;&lt;span class="c1"&gt;// Skybox visible&lt;/span&gt;
+&lt;span class="n"&gt;scene&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;billboard_mode&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;                     &lt;/span&gt;&lt;span class="c1"&gt;// Transparent spheres (billboard)&lt;/span&gt;
+&lt;span class="n"&gt;scene&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;sorting_mode&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SORTING_MODE_GPU_BITONIC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// GPU sorting&lt;/span&gt;
+&lt;span class="n"&gt;scene&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;gi_mode&lt;/span&gt;&lt;span class="w"&gt;         &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;GI_MODE_OFF&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;           &lt;/span&gt;&lt;span class="c1"&gt;// No GI&lt;/span&gt;
+&lt;span class="n"&gt;scene&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;specular_aa_enabled&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;                 &lt;/span&gt;&lt;span class="c1"&gt;// Curvature-based AA&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;4.2 — Dummy Textures and BRDF LUT&lt;/h3&gt;
+&lt;p&gt;Two sentinel textures are created immediately — they serve as &lt;strong&gt;fallbacks&lt;/strong&gt; whenever an &lt;a href="#glossary-ibl" title="Image-Based Lighting — lighting extracted from a panoramic HDR environment image"&gt;IBL&lt;/a&gt; texture isn't ready:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;scene&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;dummy_black_tex&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;render_utils_create_color_texture&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// 1×1 RGBA&lt;/span&gt;
+&lt;span class="n"&gt;scene&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;dummy_white_tex&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;render_utils_create_color_texture&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// 1×1 RGBA&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Then the &lt;strong&gt;&lt;a href="#glossary-brdf-lut" title="Pre-computed texture encoding the BRDF integral for all (angle, roughness) combinations"&gt;BRDF LUT&lt;/a&gt;&lt;/strong&gt; (Look-Up Table) is generated once via &lt;a href="#glossary-compute-shader" title="General-purpose GPU shader outside the rendering pipeline"&gt;compute shader&lt;/a&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;scene&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;brdf_lut_tex&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;build_brdf_lut_map&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;512&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Property&lt;/th&gt;
+&lt;th&gt;Value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Size&lt;/td&gt;
+&lt;td&gt;512 × 512&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Format&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RG16F&lt;/code&gt; (2 channels, 16-bit float each)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Content&lt;/td&gt;
+&lt;td&gt;Pre-integrated split-sum BRDF (Schlick-GGX)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Shader&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;shaders/IBL/spbrdf.glsl&lt;/code&gt; (compute)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Work groups&lt;/td&gt;
+&lt;td&gt;16 × 16 (512/32 per axis)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;This texture maps &lt;code&gt;(NdotV, roughness)&lt;/code&gt; → &lt;code&gt;(F0_scale, F0_bias)&lt;/code&gt; and is used every frame by the &lt;a href="#glossary-pbr" title="Physically-Based Rendering — lighting model that simulates real physics of light"&gt;PBR&lt;/a&gt; &lt;a href="#glossary-fragment-shader" title="Shader that computes the color of each on-screen pixel"&gt;fragment shader&lt;/a&gt; to avoid expensive real-time &lt;a href="#glossary-brdf" title="Bidirectional Reflectance Distribution Function — describes how light bounces off a surface"&gt;BRDF&lt;/a&gt; integration.&lt;/p&gt;
+&lt;h3&gt;4.3 — Two Rendering Modes: Billboard Ray-Tracing vs. Icosphere Mesh&lt;/h3&gt;
+&lt;p&gt;The engine supports two sphere rendering strategies. The &lt;strong&gt;default&lt;/strong&gt; is &lt;a href="#glossary-billboard" title="Screen-facing quad used here as a ray-tracing surface"&gt;billboard&lt;/a&gt; &lt;a href="#glossary-ray-tracing" title="Technique that traces light rays to compute intersections with objects"&gt;ray-tracing&lt;/a&gt;.&lt;/p&gt;
+&lt;h4&gt;Default: Billboard + Per-Pixel Ray-Tracing (billboard_mode = 1)&lt;/h4&gt;
+&lt;p&gt;Each sphere is rendered as a &lt;strong&gt;single screen-aligned quad&lt;/strong&gt; (4 vertices, 2 triangles). The fragment &lt;a href="#glossary-shader" title="Program executed directly on the GPU (vertex, fragment, compute)"&gt;shader&lt;/a&gt; performs an &lt;strong&gt;analytical ray-sphere intersection&lt;/strong&gt; per pixel, producing mathematically perfect spheres.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Billboard AABB geometry — the projected quad encloses the sphere on screen" src="https://yoyonel.github.io/en/images/suckless-ogl/billboard_aabb_geometry.png"&gt;
+&lt;em&gt;&lt;center&gt;The &lt;a href="#glossary-vertex-shader" title="Shader that processes each geometry vertex (position, projection)"&gt;vertex shader&lt;/a&gt; projects a tight &lt;a href="#glossary-quad" title="Rectangle made of 2 triangles — the basic 2D primitive"&gt;quad&lt;/a&gt; around the sphere's screen-space bounding box via analytical tangent-line computation.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Advantages&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Pixel-perfect silhouettes (no polygon faceting, ever)&lt;/li&gt;
+&lt;li&gt;Correct per-pixel depth (&lt;code&gt;gl_FragDepth&lt;/code&gt; written from the ray hit point)&lt;/li&gt;
+&lt;li&gt;Analytically smooth normals (normalized &lt;code&gt;hitPos − center&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;Edge anti-aliasing via smooth &lt;a href="#glossary-discriminant" title="Mathematical value (b²−c) determining whether a ray hits a sphere"&gt;discriminant&lt;/a&gt; falloff&lt;/li&gt;
+&lt;li&gt;True alpha transparency (glass-like, with &lt;a href="#glossary-back-to-front" title="Rendering order from farthest to nearest, required for correct transparency"&gt;back-to-front&lt;/a&gt; sorting)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre class="mermaid"&gt;
+graph LR
+    subgraph "Billboard Ray-Tracing (Default)"
+        A["4-vertex Quad&lt;br/&gt;(per instance)"] --&gt;|"Vertex Shader:&lt;br/&gt;project to sphere bounds"| B["Screen-space quad"]
+        B --&gt;|"Fragment Shader:&lt;br/&gt;ray-sphere intersection"| C["Perfect sphere&lt;br/&gt;per-pixel normal + depth"]
+    end
+
+    subgraph "Icosphere Mesh (Fallback)"
+        D["642-vertex mesh&lt;br/&gt;(subdivided icosahedron)"] --&gt;|"Rasterized as&lt;br/&gt;triangles"| E["Polygon approximation&lt;br/&gt;(faceted at low subdiv)"]
+    end
+
+    style A fill:#4CAF50,stroke:#333,stroke-width:2px
+    style D fill:#999,stroke:#333,stroke-width:1px
+&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;💡 Why Billboard Ray-Tracing?&lt;/strong&gt; With 100 spheres, the billboard approach uses &lt;strong&gt;100 × 4 = 400 vertices&lt;/strong&gt; total, versus &lt;strong&gt;100 × 642 = 64,200 vertices&lt;/strong&gt; for level-3 icospheres. More importantly, the spheres are &lt;strong&gt;mathematically perfect&lt;/strong&gt; at every zoom level — no &lt;a href="#glossary-tessellation" title="Subdividing geometry into finer triangles for more detail"&gt;tessellation&lt;/a&gt; artifacts.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h4&gt;Fallback: Instanced Icosphere Mesh (billboard_mode = 0)&lt;/h4&gt;
+&lt;p&gt;The &lt;a href="#glossary-icosphere" title="Sphere built by subdividing an icosahedron (20 faces) — more uniform than a UV sphere"&gt;icosphere&lt;/a&gt; path generates a recursively subdivided icosahedron:&lt;/p&gt;
+&lt;pre class="mermaid"&gt;
+graph LR
+    A["Level 0&lt;br/&gt;12 vertices&lt;br/&gt;20 triangles"] --&gt;|"Subdivide"| B["Level 1&lt;br/&gt;42 vertices&lt;br/&gt;80 triangles"]
+    B --&gt;|"Subdivide"| C["Level 2&lt;br/&gt;162 vertices&lt;br/&gt;320 triangles"]
+    C --&gt;|"Subdivide"| D["Level 3&lt;br/&gt;642 vertices&lt;br/&gt;1,280 triangles"]
+    D --&gt;|"..."| E["Level 6&lt;br/&gt;~40k vertices"]
+&lt;/pre&gt;
+
+&lt;h3&gt;4.4 — Material Library&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;scene&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;material_lib&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;material_load_presets&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;assets/materials/pbr_materials.json&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The JSON file defines &lt;strong&gt;101 PBR material presets&lt;/strong&gt; organized by category:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Category&lt;/th&gt;
+&lt;th&gt;Examples&lt;/th&gt;
+&lt;th&gt;Metallic&lt;/th&gt;
+&lt;th&gt;Roughness&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Pure Metals&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Gold, Silver, Copper, Chrome&lt;/td&gt;
+&lt;td&gt;1.0&lt;/td&gt;
+&lt;td&gt;0.05–0.2&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Weathered Metals&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Rusty Iron, Oxidized Copper&lt;/td&gt;
+&lt;td&gt;0.7–0.95&lt;/td&gt;
+&lt;td&gt;0.4–0.8&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Glossy Dielectrics&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Colored Plastics&lt;/td&gt;
+&lt;td&gt;0.0&lt;/td&gt;
+&lt;td&gt;0.05–0.15&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Matte Materials&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Fabric, Clay, Sand&lt;/td&gt;
+&lt;td&gt;0.0&lt;/td&gt;
+&lt;td&gt;0.65–0.95&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Stones&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Granite, Marble, Obsidian&lt;/td&gt;
+&lt;td&gt;0.0&lt;/td&gt;
+&lt;td&gt;0.35–0.85&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Organics&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Oak, Leather, Bone&lt;/td&gt;
+&lt;td&gt;0.0&lt;/td&gt;
+&lt;td&gt;0.35–0.75&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Paints&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Car Paint, Pearl, Satin&lt;/td&gt;
+&lt;td&gt;0.3–0.7&lt;/td&gt;
+&lt;td&gt;0.1–0.5&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Technical&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Rubber, Carbon, Ceramic&lt;/td&gt;
+&lt;td&gt;0.0–0.1&lt;/td&gt;
+&lt;td&gt;0.05–0.85&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Each material provides: &lt;code&gt;albedo&lt;/code&gt; (RGB), &lt;code&gt;metallic&lt;/code&gt; (0–1), &lt;code&gt;roughness&lt;/code&gt; (0–1).&lt;/p&gt;
+&lt;h3&gt;4.5 — The Instance Grid&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;       &lt;/span&gt;&lt;span class="c1"&gt;// DEFAULT_COLS&lt;/span&gt;
+&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;spacing&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;2.5F&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="c1"&gt;// DEFAULT_SPACING&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;A &lt;strong&gt;10×10 grid of 100 spheres&lt;/strong&gt; is laid out in the XY plane, centered at the origin:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Grid dimensions:
+  Width  = (10 - 1) × 2.5 = 22.5 units
+  Height = (10 - 1) × 2.5 = 22.5 units
+  Z = 0 (all spheres in the same plane)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Each instance stores &lt;strong&gt;88 bytes&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;typedef&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nc"&gt;SphereInstance&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;mat4&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;model&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="c1"&gt;// 64 bytes — 4×4 transform matrix&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;vec3&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;albedo&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="c1"&gt;// 12 bytes — RGB color&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;metallic&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="c1"&gt;//  4 bytes&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;roughness&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;//  4 bytes&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ao&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;         &lt;/span&gt;&lt;span class="c1"&gt;//  4 bytes — always 1.0&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SphereInstance&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="c1"&gt;// Total: 88 bytes per instance&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;4.6 — VAO Layout (Billboard Mode)&lt;/h3&gt;
+&lt;p&gt;In billboard mode, the &lt;a href="#glossary-vao" title="Vertex Array Object — describes the format of geometric data sent to the GPU"&gt;VAO&lt;/a&gt; binds a &lt;strong&gt;4-vertex quad&lt;/strong&gt; and per-instance material data:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;┌────────────────────────────────────────────────────────────────┐
+│              Billboard VAO (Default Rendering Mode)            │
+├────────────┬────────────┬─────────────────────────────────────┤
+│  Location  │  Source    │  Description                        │
+├────────────┼────────────┼─────────────────────────────────────┤
+│  0         │  Quad VBO  │  vec3 position   (±0.5 quad verts)  │
+│  1         │  Quad VBO  │  vec3 normal     (stub, unused)     │
+│  2–5       │  Inst VBO  │  mat4 model      (per-instance)     │
+│  6         │  Inst VBO  │  vec3 albedo     (per-instance)     │
+│  7         │  Inst VBO  │  vec3 pbr (M,R,AO) (per-instance)   │
+└────────────┴────────────┴─────────────────────────────────────┘
+
+Location 0–1: glVertexAttribDivisor = 0 (advance per vertex, 4 verts)
+Location 2–7: glVertexAttribDivisor = 1 (advance per instance)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Draw call&lt;/strong&gt;: &lt;code&gt;glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 100)&lt;/code&gt; — 100 quads, face culling disabled.&lt;/p&gt;
+&lt;h3&gt;4.7 — Shader Compilation&lt;/h3&gt;
+&lt;p&gt;All shaders are compiled during &lt;code&gt;scene_init()&lt;/code&gt;. The loader (&lt;a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/shader.c"&gt;src/shader.c&lt;/a&gt;) supports a custom &lt;strong&gt;&lt;code&gt;@header&lt;/code&gt; include system&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;// In pbr_ibl_instanced.frag:&lt;/span&gt;
+&lt;span class="err"&gt;@&lt;/span&gt;&lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;&amp;quot;&lt;/span&gt;&lt;span class="n"&gt;pbr_functions&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;glsl&lt;/span&gt;&lt;span class="err"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="err"&gt;@&lt;/span&gt;&lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;&amp;quot;&lt;/span&gt;&lt;span class="n"&gt;sh_probe&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;glsl&lt;/span&gt;&lt;span class="err"&gt;&amp;quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This recursively inlines files (max depth: 16) with include-guard deduplication.&lt;/p&gt;
+&lt;pre class="mermaid"&gt;
+graph TD
+    INIT["scene_init() — Shader Compilation"] --&gt; REND
+    INIT --&gt; COMP
+    INIT --&gt; POST
+
+    subgraph REND ["🎨 Rendering Programs"]
+        direction TB
+        PBR["PBR Instanced — pbr_ibl_instanced.vert/.frag"]
+        BB["PBR Billboard — pbr_ibl_billboard.vert/.frag"]
+        SKY["Skybox — background.vert/.frag"]
+        UI["UI Overlay — ui.vert/.frag"]
+    end
+
+    subgraph COMP ["⚡ Compute Shaders"]
+        direction TB
+        SPMAP["Specular Prefilter — IBL/spmap.glsl"]
+        IRMAP["Irradiance Conv. — IBL/irmap.glsl"]
+        BRDF["BRDF LUT — IBL/spbrdf.glsl"]
+        LUM["Luminance Reduction — IBL/luminance_reduce"]
+    end
+
+    subgraph POST ["✨ Post-Process"]
+        direction TB
+        PP["Final Composite — postprocess.vert/.frag"]
+        BL["Bloom — down/up/prefilter"]
+    end
+&lt;/pre&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;Chapter 5 — Post-Processing Pipeline Setup&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;postprocess_init&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;postprocess&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;gpu_profiler&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1920&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1080&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;5.1 — The Scene FBO (Multi-Render Target)&lt;/h3&gt;
+&lt;p&gt;The main offscreen framebuffer uses &lt;strong&gt;&lt;a href="#glossary-mrt" title="Multiple Render Targets — write to several textures in a single render pass"&gt;MRT&lt;/a&gt;&lt;/strong&gt; (Multiple Render Targets):&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Attachment&lt;/th&gt;
+&lt;th&gt;Format&lt;/th&gt;
+&lt;th&gt;Size&lt;/th&gt;
+&lt;th&gt;Purpose&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GL_COLOR_ATTACHMENT0&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RGBA16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;1920×1080&lt;/td&gt;
+&lt;td&gt;HDR scene color (alpha = luma for FXAA)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GL_COLOR_ATTACHMENT1&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RG16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;1920×1080&lt;/td&gt;
+&lt;td&gt;Per-pixel velocity for motion blur&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GL_DEPTH_STENCIL_ATTACHMENT&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_DEPTH32F_STENCIL8&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;1920×1080&lt;/td&gt;
+&lt;td&gt;Depth buffer + stencil mask&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Stencil view&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_R8UI&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;1920×1080&lt;/td&gt;
+&lt;td&gt;Read-only stencil as texture&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class="mermaid"&gt;
+graph TD
+    FBO["Scene FBO — Multi-Render Target"] --&gt; C0
+    FBO --&gt; C1
+    FBO --&gt; DS
+    DS --&gt; SV
+
+    C0["🟦 Color 0 — GL_RGBA16F&lt;br/&gt;HDR Scene Color"]
+    C1["🟩 Color 1 — GL_RG16F&lt;br/&gt;Velocity Vectors"]
+    DS["🟫 Depth/Stencil — GL_DEPTH32F_STENCIL8"]
+    SV["🟪 Stencil View — GL_R8UI (TextureView)"]
+&lt;/pre&gt;
+
+&lt;h3&gt;5.2 — Sub-Effect Resources&lt;/h3&gt;
+&lt;p&gt;Each post-processing effect initializes its own resources:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Effect&lt;/th&gt;
+&lt;th&gt;GPU Resources&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Bloom&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Mip-chain FBOs (6 levels), prefilter/downsample/upsample textures&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;DoF&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Blur texture, CoC (Circle of Confusion) texture&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Auto-Exposure&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Luminance downsample texture, 2× PBOs (readback), 2× GLSync fences&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Motion Blur&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Tile-max velocity texture (compute), neighbor-max texture (compute)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;3D LUT&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;32³ &lt;code&gt;GL_TEXTURE_3D&lt;/code&gt; loaded from &lt;code&gt;.cube&lt;/code&gt; files&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;5.3 — Default Active Effects&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;postprocess_enable&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;postprocess&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;POSTFX_FXAA&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// Only FXAA&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;On startup, only &lt;strong&gt;&lt;a href="#glossary-fxaa" title="Fast Approximate Anti-Aliasing — fast post-process anti-aliasing on the final image"&gt;FXAA&lt;/a&gt;&lt;/strong&gt; is active. Other effects are toggled at runtime via keyboard shortcuts.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Chapter 6 — The First HDR Environment Load&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;env_manager_load&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;env_mgr&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;async_loader&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;quot;env.hdr&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This triggers the &lt;strong&gt;asynchronous environment loading pipeline&lt;/strong&gt; — the most complex multi-frame operation in the engine.&lt;/p&gt;
+&lt;h3&gt;6.1 — Async Loading Sequence&lt;/h3&gt;
+&lt;pre class="mermaid"&gt;
+sequenceDiagram
+    participant Main as Main Thread (Render)
+    participant Worker as Async Worker Thread
+    participant GPU as GPU
+
+    Main-&gt;&gt;Worker: async_loader_request("env.hdr")
+    Note over Worker: State: PENDING → LOADING
+    Worker-&gt;&gt;Worker: stbi_loadf() — decode HDR to float RGBA
+    Note over Worker: ~50ms for 2K HDR on NVMe
+
+    Worker--&gt;&gt;Main: State: WAITING_FOR_PBO
+    Main-&gt;&gt;GPU: glGenBuffers() → PBO
+    Main-&gt;&gt;GPU: glMapBuffer(PBO, WRITE)
+    Main--&gt;&gt;Worker: async_loader_provide_pbo(pbo_ptr)
+
+    Note over Worker: State: CONVERTING
+    Worker-&gt;&gt;Worker: SIMD float32 → float16 conversion
+    Note over Worker: ~2ms for 2048×1024
+
+    Worker--&gt;&gt;Main: State: READY
+    Main-&gt;&gt;GPU: glUnmapBuffer(PBO)
+    Main-&gt;&gt;GPU: glTexSubImage2D(from PBO)
+    Note over GPU: DMA transfer: PBO → VRAM
+    Main-&gt;&gt;GPU: glGenerateMipmap()
+&lt;/pre&gt;
+
+&lt;h3&gt;6.2 — Transition State Machine&lt;/h3&gt;
+&lt;p&gt;During the first load, the screen stays &lt;strong&gt;black&lt;/strong&gt; (no crossfade from a previous scene):&lt;/p&gt;
+&lt;pre class="mermaid"&gt;
+stateDiagram-v2
+    [*] --&gt; WAIT_IBL: "First load"
+    WAIT_IBL --&gt; WAIT_IBL: "IBL in progress..."
+    WAIT_IBL --&gt; FADE_IN: "IBL complete"
+    FADE_IN --&gt; IDLE: "Alpha reaches 0"
+&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;WAIT_IBL&lt;/code&gt;&lt;/strong&gt;: &lt;code&gt;transition_alpha = 1.0&lt;/code&gt; (fully opaque black) — the screen is black during the first few frames.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;FADE_IN&lt;/code&gt;&lt;/strong&gt;: Alpha decreases from 1.0 → 0.0 over 250ms.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Chapter 7 — IBL Generation (Progressive, Multi-Frame)&lt;/h2&gt;
+&lt;p&gt;Once the &lt;a href="#glossary-hdr" title="High Dynamic Range — color values exceeding 1.0 (realistic light intensities)"&gt;HDR&lt;/a&gt; texture is uploaded, the &lt;strong&gt;IBL Coordinator&lt;/strong&gt; (&lt;a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/ibl_coordinator.c"&gt;src/ibl_coordinator.c&lt;/a&gt;) takes over. It computes three maps across multiple frames to avoid GPU stalls.&lt;/p&gt;
+&lt;h3&gt;7.1 — The Three IBL Maps&lt;/h3&gt;
+&lt;pre class="mermaid"&gt;
+graph TB
+    HDR["HDR Environment Map&lt;br/&gt;2048×1024 equirectangular&lt;br/&gt;GL_RGBA16F"] --&gt; SPEC
+    HDR --&gt; IRR
+    HDR --&gt; LUM
+
+    SPEC["Specular Prefilter Map&lt;br/&gt;1024×1024 × 5 mip levels&lt;br/&gt;Compute: spmap.glsl"]
+    IRR["Irradiance Map&lt;br/&gt;64×64&lt;br/&gt;Compute: irmap.glsl"]
+    LUM["Luminance Reduction&lt;br/&gt;1×1 average&lt;br/&gt;Compute: luminance_reduce"]
+
+    SPEC --&gt;|"Per-pixel reflection&lt;br/&gt;roughness → mip level"| PBR["PBR Shader"]
+    IRR --&gt;|"Diffuse hemisphere&lt;br/&gt;integral"| PBR
+    LUM --&gt;|"Auto exposure&lt;br/&gt;threshold"| PP["Post-Process"]
+&lt;/pre&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Map&lt;/th&gt;
+&lt;th&gt;Resolution&lt;/th&gt;
+&lt;th&gt;Format&lt;/th&gt;
+&lt;th&gt;Mip Levels&lt;/th&gt;
+&lt;th&gt;Compute Shader&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Specular Prefilter&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;1024×1024&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RGBA16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;IBL/spmap.glsl&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Irradiance&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;64×64&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RGBA16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;IBL/irmap.glsl&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Luminance&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;1×1&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_R32F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;IBL/luminance_reduce_pass1/2.glsl&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;7.2 — Progressive Slicing Strategy&lt;/h3&gt;
+&lt;p&gt;To avoid frame spikes, each mip level is subdivided into &lt;strong&gt;slices&lt;/strong&gt; processed over consecutive frames:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;IBL Stage&lt;/th&gt;
+&lt;th&gt;Hardware GPU&lt;/th&gt;
+&lt;th&gt;Software GPU (llvmpipe)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Specular Mip 0 (1024²)&lt;/td&gt;
+&lt;td&gt;24 slices (42 rows each)&lt;/td&gt;
+&lt;td&gt;1 slice (full)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Specular Mip 1 (512²)&lt;/td&gt;
+&lt;td&gt;8 slices&lt;/td&gt;
+&lt;td&gt;1 slice&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Specular Mips 2–4&lt;/td&gt;
+&lt;td&gt;Grouped (1 dispatch)&lt;/td&gt;
+&lt;td&gt;1 slice&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Irradiance (64²)&lt;/td&gt;
+&lt;td&gt;12 slices&lt;/td&gt;
+&lt;td&gt;1 slice&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Luminance&lt;/td&gt;
+&lt;td&gt;2 dispatches (pass 1 + 2)&lt;/td&gt;
+&lt;td&gt;2 dispatches&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class="mermaid"&gt;
+gantt
+    title Progressive IBL Generation Timeline
+    dateFormat X
+    axisFormat Frame %s
+
+    section Luminance
+    Luminance Pass 1      :lum1, 0, 1
+    Luminance Wait (fence) :lum2, 1, 2
+    Luminance Readback     :lum3, 2, 3
+
+    section Specular Mip 0
+    Slice 1/24            :s1, 3, 4
+    Slice 2/24            :s2, 4, 5
+    Slice ...             :s3, 5, 6
+    Slice 24/24           :s4, 6, 7
+
+    section Specular Mip 1
+    Slices 1-8            :m1, 7, 9
+
+    section Specular Mips 2-4
+    Grouped dispatch      :m3, 9, 10
+
+    section Irradiance
+    Slices 1-12           :i1, 10, 12
+
+    section Done
+    IBL Complete → Fade In :done, 12, 13
+&lt;/pre&gt;
+
+&lt;h3&gt;7.3 — IBL State Machine&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;enum&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;IBLState&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;IBL_STATE_IDLE&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;             &lt;/span&gt;&lt;span class="c1"&gt;// No work&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;IBL_STATE_LUMINANCE&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="c1"&gt;// Pass 1: luminance reduction&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;IBL_STATE_LUMINANCE_WAIT&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="c1"&gt;// Wait for readback fence&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;IBL_STATE_SPECULAR_INIT&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// Allocate specular texture&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;IBL_STATE_SPECULAR_MIPS&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// Progressive mip generation&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;IBL_STATE_IRRADIANCE&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;       &lt;/span&gt;&lt;span class="c1"&gt;// Progressive irradiance convolution&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;IBL_STATE_DONE&lt;/span&gt;&lt;span class="w"&gt;              &lt;/span&gt;&lt;span class="c1"&gt;// All maps ready&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;Chapter 8 — The Main Loop&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;app_run()&lt;/code&gt; (&lt;a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/app.c"&gt;src/app.c&lt;/a&gt;) is the heartbeat — a classic &lt;strong&gt;uncapped game loop&lt;/strong&gt; with fixed-timestep physics.&lt;/p&gt;
+&lt;pre class="mermaid"&gt;
+graph TD
+    A["① glfwPollEvents() — Keyboard, mouse, resize"]
+    A --&gt; B["② Time &amp; FPS — delta_time, frame_count"]
+    B --&gt; C["③ Camera Physics — Fixed 60Hz, smooth rotation lerp"]
+    C --&gt; D["④ Geometry Update — if subdivisions changed"]
+    D --&gt; E["⑤ app_update() — Process input state"]
+    E --&gt; F["⑥ renderer_draw_frame() — THE BIG ONE"]
+    F --&gt; G["⑦ Tracy screenshots — profiling"]
+    G --&gt; H["⑧ glfwSwapBuffers() — Present to screen"]
+    H --&gt;|"next frame"| A
+&lt;/pre&gt;
+
+&lt;h3&gt;8.1 — Deferred Resize&lt;/h3&gt;
+&lt;p&gt;Window resize events are &lt;strong&gt;deferred&lt;/strong&gt; — the &lt;a href="#glossary-glfw" title="C library for creating windows and handling keyboard/mouse input"&gt;GLFW&lt;/a&gt; callback only records the new dimensions. The actual &lt;a href="#glossary-fbo" title="Framebuffer Object — offscreen render surface (draw to it instead of the screen)"&gt;FBO&lt;/a&gt; recreation happens at the start of the next frame, outside the callback's limited context.&lt;/p&gt;
+&lt;h3&gt;8.2 — Camera Fixed-Timestep Integration&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;physics_accumulator&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;delta_time&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;physics_accumulator&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fixed_timestep&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;camera_fixed_update&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// Velocity, friction, bobbing&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;physics_accumulator&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fixed_timestep&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="c1"&gt;// Smooth rotation (exponential interpolation)&lt;/span&gt;
+&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;alpha&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rotation_smoothing&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// ~0.1&lt;/span&gt;
+&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;yaw&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="o"&gt;+=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;yaw_target&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;yaw&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;alpha&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pitch&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pitch_target&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pitch&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;alpha&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="n"&gt;camera_update_vectors&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This ensures deterministic physics regardless of frame rate, while rotation stays smooth via per-frame interpolation.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Chapter 9 — Rendering a Frame&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;renderer_draw_frame()&lt;/code&gt; (&lt;a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/renderer.c"&gt;src/renderer.c&lt;/a&gt;) orchestrates the full rendering pipeline.&lt;/p&gt;
+&lt;h3&gt;9.1 — High-Level Architecture&lt;/h3&gt;
+&lt;pre class="mermaid"&gt;
+graph TD
+    A["GPU Profiler Begin"] --&gt; B["postprocess_begin() — Bind Scene FBO, Clear"]
+    B --&gt; C["camera_get_view_matrix()"]
+    C --&gt; D["glm_perspective() — FOV=60°, near=0.1, far=1000"]
+    D --&gt; E["ViewProj = Proj × View"]
+    E --&gt; G1["🌅 Pass 1: Skybox — depth disabled"]
+    G1 --&gt; G2["🔢 Pass 2: Sphere Sorting — GPU Bitonic"]
+    G2 --&gt; G3["🔮 Pass 3: PBR Spheres — instanced billboard draw"]
+    G3 --&gt; H["✨ postprocess_end() — 7-Stage Pipeline"]
+    H --&gt; I["🖥️ UI Overlay + Env Transition"]
+&lt;/pre&gt;
+
+&lt;h3&gt;9.2 — Pass 1: Skybox&lt;/h3&gt;
+&lt;p&gt;The &lt;a href="#glossary-skybox" title="Panoramic image displayed as scene background (sky/environment)"&gt;skybox&lt;/a&gt; is drawn &lt;strong&gt;first&lt;/strong&gt;, with depth testing &lt;strong&gt;disabled&lt;/strong&gt;. It uses a fullscreen &lt;a href="#glossary-quad" title="Rectangle made of 2 triangles — the basic 2D primitive"&gt;quad&lt;/a&gt; trick:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;// background.vert — reconstruct world-space ray&lt;/span&gt;
+&lt;span class="nb"&gt;gl_Position&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;vec4&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;in_position&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;xy&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// Depth = 1.0 (far plane)&lt;/span&gt;
+&lt;span class="kt"&gt;vec4&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pos&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;m_inv_view_proj&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;vec4&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;in_position&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;xy&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="n"&gt;RayDir&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pos&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;xyz&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pos&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;w&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// Reconstructed world-space ray&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;// background.frag — equirectangular sampling of the HDR&lt;/span&gt;
+&lt;span class="kt"&gt;vec2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;uv&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SampleEquirectangular&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;normalize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RayDir&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+&lt;span class="kt"&gt;vec3&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;envColor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;textureLod&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;environmentMap&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;uv&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;blur_lod&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="n"&gt;rgb&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="n"&gt;envColor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;clamp&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;envColor&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;vec3&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;vec3&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;200.0&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// NaN protection + anti-fireflies&lt;/span&gt;
+&lt;span class="n"&gt;FragColor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;vec4&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;envColor&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;luma&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// Alpha = luma for FXAA&lt;/span&gt;
+&lt;span class="n"&gt;VelocityOut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;vec2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="c1"&gt;// No motion for skybox&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;9.3 — Pass 2: Sphere Sorting (GPU Bitonic Sort)&lt;/h3&gt;
+&lt;p&gt;For transparent &lt;a href="#glossary-billboard" title="Screen-facing quad used here as a ray-tracing surface"&gt;billboard&lt;/a&gt; rendering, spheres must be drawn &lt;strong&gt;back-to-front&lt;/strong&gt;:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Mode&lt;/th&gt;
+&lt;th&gt;Where&lt;/th&gt;
+&lt;th&gt;Algorithm&lt;/th&gt;
+&lt;th&gt;Complexity&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;CPU_QSORT&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;CPU&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;qsort()&lt;/code&gt; (stdlib)&lt;/td&gt;
+&lt;td&gt;O(n·log n) avg&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;CPU_RADIX&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;CPU&lt;/td&gt;
+&lt;td&gt;Radix sort&lt;/td&gt;
+&lt;td&gt;O(n·k)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GPU_BITONIC&lt;/code&gt; ★&lt;/td&gt;
+&lt;td&gt;GPU&lt;/td&gt;
+&lt;td&gt;Bitonic merge sort (compute)&lt;/td&gt;
+&lt;td&gt;O(n·log²n)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;9.4 — Pass 3: PBR Spheres — Billboard Ray-Tracing&lt;/h3&gt;
+&lt;p&gt;This is the core rendering pass. &lt;strong&gt;A single &lt;a href="#glossary-draw-call" title="A CPU→GPU call requesting geometry rendering"&gt;draw call&lt;/a&gt; renders all 100 spheres&lt;/strong&gt;:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Metric&lt;/th&gt;
+&lt;th&gt;Value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Vertices per sphere&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;4&lt;/strong&gt; (billboard quad)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Triangles per sphere&lt;/td&gt;
+&lt;td&gt;2 (triangle strip)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Instances&lt;/td&gt;
+&lt;td&gt;100 (10×10 grid)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Total vertices&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;400&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Draw calls&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;1&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sphere precision&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;Mathematically perfect&lt;/strong&gt; (ray-traced)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;9.5 — The Billboard Fragment Shader (Ray-Sphere Intersection)&lt;/h3&gt;
+&lt;p&gt;The &lt;a href="#glossary-fragment-shader" title="Shader that computes the color of each on-screen pixel"&gt;fragment shader&lt;/a&gt; (&lt;code&gt;pbr_ibl_billboard.frag&lt;/code&gt;) is where the real magic happens. Instead of shading a rasterized &lt;a href="#glossary-mesh" title="Collection of triangles forming a 3D object"&gt;mesh&lt;/a&gt;, it &lt;strong&gt;analytically intersects a ray with a perfect sphere&lt;/strong&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Ray-sphere intersection — the geometric principle" src="https://yoyonel.github.io/en/images/suckless-ogl/sphere_intersection.jpg"&gt;
+&lt;em&gt;&lt;center&gt;Analytical ray-sphere intersection: the &lt;a href="#glossary-discriminant" title="Mathematical value (b²−c) determining whether a ray hits a sphere"&gt;discriminant&lt;/a&gt; determines whether the pixel hits the sphere.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;// Analytical ray-sphere intersection&lt;/span&gt;
+&lt;span class="kt"&gt;vec3&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;oc&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rayOrigin&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;center&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;oc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rayDir&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;oc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;oc&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;radius&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;radius&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;discriminant&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// &amp;gt;0 = hit, &amp;lt;0 = miss&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;discriminant&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;discard&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;t&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sqrt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;discriminant&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// nearest intersection&lt;/span&gt;
+&lt;span class="kt"&gt;vec3&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;hitPos&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rayOrigin&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;t&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rayDir&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kt"&gt;vec3&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;normalize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;hitPos&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;center&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// perfect analytic normal&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;pre class="mermaid"&gt;
+graph TD
+    R["🔦 Build Ray — origin=camPos, dir=normalize(WorldPos-camPos)"]
+    R --&gt; INT["📐 Ray-Sphere Intersection — discriminant = b² - c"]
+    INT --&gt; HIT{"Hit?"}
+    HIT --&gt;|"No — disc &lt; 0"| DISCARD["❌ discard — pixel outside sphere"]
+    HIT --&gt;|"Yes"| HITPOS["✅ hitPos = origin + t × dir"]
+    HITPOS --&gt; NORMAL["N = normalize(hitPos - center) — perfect normal"]
+    HITPOS --&gt; DEPTH["gl_FragDepth = project(hitPos) — correct Z-buffer"]
+    NORMAL --&gt; PBR["V = -rayDir"]
+    PBR --&gt; FRESNEL["Fresnel-Schlick"]
+    PBR --&gt; GGX["Smith-GGX Geometry"]
+    PBR --&gt; NDF["GGX NDF Distribution"]
+    FRESNEL &amp; GGX &amp; NDF --&gt; SPEC["IBL Specular — prefilterMap × brdfLUT"]
+    PBR --&gt; DIFF["IBL Diffuse — irradiance(N) × albedo"]
+    SPEC &amp; DIFF --&gt; FINAL["color = Diffuse + Specular"]
+    FINAL --&gt; AA["Edge Anti-Aliasing — smoothstep on discriminant"]
+    AA --&gt; ALPHA["FragColor = vec4(color, edgeFactor) — premultiplied alpha"]
+&lt;/pre&gt;
+
+&lt;h4&gt;Analytical Edge Anti-Aliasing&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="Analytical anti-aliasing of spheres — smoothstep on the discriminant" src="https://yoyonel.github.io/en/images/suckless-ogl/sphere_analytic_aa.jpg"&gt;
+&lt;em&gt;&lt;center&gt;Analytical anti-aliasing uses the discriminant as a distance-to-edge metric — no &lt;a href="#glossary-msaa" title="Multisample Anti-Aliasing — geometric anti-aliasing (expensive, avoided here)"&gt;MSAA&lt;/a&gt; needed for smooth edges.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pixelSizeWorld&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;2.0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;clipW&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;proj&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;screenHeight&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;edgeFactor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;smoothstep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;discriminant&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;2.0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;radius&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pixelSizeWorld&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+&lt;span class="n"&gt;FragColor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;vec4&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;edgeFactor&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;edgeFactor&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="c1"&gt;// premultiplied alpha&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img alt="Detail of perfect sphere anti-aliasing" src="https://yoyonel.github.io/en/images/suckless-ogl/sphere_perfect_aa_detail.jpg"&gt;
+&lt;em&gt;&lt;center&gt;Close-up detail: sphere edges are perfectly smooth thanks to analytical &lt;a href="#glossary-ray-tracing" title="Technique that traces light rays to compute intersections with objects"&gt;ray-tracing&lt;/a&gt;.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h4&gt;Billboard Projection&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="Sphere AABB projection optimization" src="https://yoyonel.github.io/en/images/suckless-ogl/sphere_aabb_optimization_projective.png"&gt;
+&lt;em&gt;&lt;center&gt;The &lt;a href="#glossary-vertex-shader" title="Shader that processes each geometry vertex (position, projection)"&gt;vertex shader&lt;/a&gt; computes a tight screen-space quad via analytical tangent-line projection, handling 3 cases: camera outside, inside, or behind the sphere.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Chapter 10 — Post-Processing Pipeline&lt;/h2&gt;
+&lt;p&gt;After the 3D scene is rendered into the &lt;a href="#glossary-mrt" title="Multiple Render Targets — write to several textures in a single render pass"&gt;MRT&lt;/a&gt; &lt;a href="#glossary-fbo" title="Framebuffer Object — offscreen render surface (draw to it instead of the screen)"&gt;FBO&lt;/a&gt;, &lt;code&gt;postprocess_end()&lt;/code&gt; applies up to &lt;strong&gt;8 effects&lt;/strong&gt; in a carefully ordered pipeline.&lt;/p&gt;
+&lt;h3&gt;10.1 — The 7-Stage Pipeline&lt;/h3&gt;
+&lt;pre class="mermaid"&gt;
+graph TD
+    A["Memory Barrier — flush MRT writes"]
+    A --&gt; B["① Bloom — Downsample → Threshold → Upsample"]
+    B --&gt; C["② Depth of Field — CoC → Bokeh blur"]
+    C --&gt; D["③ Auto-Exposure — Luminance reduction → PBO readback"]
+    D --&gt; E["④ Motion Blur — Tile-max velocity → Neighbor-max"]
+    E --&gt; F["⑤ Bind 9 Textures + Upload UBO"]
+    F --&gt; H["Draw fullscreen quad"]
+    H --&gt; J["Vignette"]
+    J --&gt; K["Film Grain"]
+    K --&gt; L["White Balance"]
+    L --&gt; M["Color Grading — Sat, Contrast, Gamma, Gain"]
+    M --&gt; N["Tonemapping — filmic curve"]
+    N --&gt; O["3D LUT Grading"]
+    O --&gt; P["FXAA"]
+    P --&gt; Q["Dithering — anti-banding"]
+    Q --&gt; R["Atmospheric Fog"]
+&lt;/pre&gt;
+
+&lt;h3&gt;10.2 — Post-Processing Effects Gallery&lt;/h3&gt;
+&lt;p&gt;Here is the &lt;strong&gt;front view&lt;/strong&gt; render with different effects enabled individually — each image shows a single effect applied to the same scene:&lt;/p&gt;
+&lt;h4&gt;No post-processing (raw)&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="Raw render without any post-processing" src="https://yoyonel.github.io/en/images/suckless-ogl/ref_front_subtle_none.png"&gt;
+&lt;em&gt;&lt;center&gt;Raw image from the &lt;a href="#glossary-pbr" title="Physically-Based Rendering — lighting model that simulates real physics of light"&gt;PBR&lt;/a&gt; renderer — no post-processing applied.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h4&gt;FXAA (fast anti-aliasing)&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="Render with FXAA enabled" src="https://yoyonel.github.io/en/images/suckless-ogl/ref_front_subtle_fxaa.png"&gt;
+&lt;em&gt;&lt;center&gt;&lt;a href="#glossary-fxaa" title="Fast Approximate Anti-Aliasing — fast post-process anti-aliasing on the final image"&gt;FXAA&lt;/a&gt; (Fast Approximate Anti-Aliasing) — smooths edges without the cost of &lt;a href="#glossary-msaa" title="Multisample Anti-Aliasing — geometric anti-aliasing (expensive, avoided here)"&gt;MSAA&lt;/a&gt;.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h4&gt;Bloom&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="Render with Bloom enabled" src="https://yoyonel.github.io/en/images/suckless-ogl/ref_front_subtle_bloom.png"&gt;
+&lt;em&gt;&lt;center&gt;&lt;a href="#glossary-bloom" title="Glow halo around very bright areas (lens light diffusion)"&gt;Bloom&lt;/a&gt; — bright areas bleed outward, simulating lens light diffusion.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h4&gt;Depth of Field&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="Render with Depth of Field enabled" src="https://yoyonel.github.io/en/images/suckless-ogl/ref_front_subtle_dof.png"&gt;
+&lt;em&gt;&lt;center&gt;Depth of Field — objects out of focus are blurred like with a real lens.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h4&gt;Auto-Exposure&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="Render with Auto-Exposure enabled" src="https://yoyonel.github.io/en/images/suckless-ogl/ref_front_subtle_auto_exposure.png"&gt;
+&lt;em&gt;&lt;center&gt;&lt;a href="#glossary-auto-exposure" title="Automatic scene brightness adaptation (simulates the eye's iris)"&gt;Auto-exposure&lt;/a&gt; — the engine adapts exposure like the human eye adjusting to brightness.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h4&gt;Motion Blur&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="Render with Motion Blur enabled" src="https://yoyonel.github.io/en/images/suckless-ogl/ref_front_subtle_motion_blur.png"&gt;
+&lt;em&gt;&lt;center&gt;Per-pixel &lt;a href="#glossary-motion-blur" title="Per-pixel motion blur simulating a camera shutter"&gt;motion blur&lt;/a&gt; — uses velocity vectors to simulate cinematic motion blur.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h4&gt;Sony A7S III Cinematic Profile&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="Render with Sony A7S III profile" src="https://yoyonel.github.io/en/images/suckless-ogl/ref_front_sony_a7siii.png"&gt;
+&lt;em&gt;&lt;center&gt;Full Sony A7S III photographic profile — &lt;a href="#glossary-color-grading" title="Creative color adjustments (saturation, contrast, gamma, hue)"&gt;color grading&lt;/a&gt;, white balance, exposure, and &lt;a href="#glossary-3d-lut" title="3D color lookup table for a cinematic &amp;quot;look&amp;quot; (.cube file)"&gt;3D LUT&lt;/a&gt; combined for a cinematic look.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h3&gt;10.3 — Shader Optimization via Conditional Compilation&lt;/h3&gt;
+&lt;p&gt;The post-process &lt;a href="#glossary-fragment-shader" title="Shader that computes the color of each on-screen pixel"&gt;fragment shader&lt;/a&gt; uses &lt;strong&gt;compile-time #defines&lt;/strong&gt; to eliminate branches:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="cp"&gt;#ifdef OPT_ENABLE_BLOOM&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;bloomTexture&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;bloomIntensity&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="cp"&gt;#endif&lt;/span&gt;
+
+&lt;span class="cp"&gt;#ifdef OPT_ENABLE_FXAA&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;fxaa&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;color&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;uv&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;texelSize&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="cp"&gt;#endif&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;A 32-entry &lt;strong&gt;LRU cache&lt;/strong&gt; stores compiled &lt;a href="#glossary-shader" title="Program executed directly on the GPU (vertex, fragment, compute)"&gt;shader&lt;/a&gt; variants for different effect flag combinations. Switching effects triggers lazy recompilation only for new combinations.&lt;/p&gt;
+&lt;h3&gt;10.4 — Tonemapping Curves&lt;/h3&gt;
+&lt;p&gt;&lt;img alt="Tonemapping curves comparison" src="https://yoyonel.github.io/en/images/suckless-ogl/tonemapping_curves.png"&gt;
+&lt;em&gt;&lt;center&gt;Comparison of available &lt;a href="#glossary-tonemapping" title="Conversion of HDR colors (unbounded) to displayable LDR (0–255)"&gt;tonemapping&lt;/a&gt; curves — the transformation from linear &lt;a href="#glossary-hdr" title="High Dynamic Range — color values exceeding 1.0 (realistic light intensities)"&gt;HDR&lt;/a&gt; to displayable LDR.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h3&gt;10.5 — Exposure Adaptation&lt;/h3&gt;
+&lt;p&gt;&lt;img alt="Exposure adaptation over time" src="https://yoyonel.github.io/en/images/suckless-ogl/exposure_adaptation.jpg"&gt;
+&lt;em&gt;&lt;center&gt;Auto-exposure progressively adapts frame brightness, like the eye's iris adjusting to light.&lt;/center&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Chapter 11 — The First Visible Frame&lt;/h2&gt;
+&lt;p&gt;Let's trace what actually appears on screen during the first seconds:&lt;/p&gt;
+&lt;h3&gt;Startup Timeline&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Frames&lt;/th&gt;
+&lt;th&gt;What Happens&lt;/th&gt;
+&lt;th&gt;On Screen&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;1–2&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Async loader reads &lt;code&gt;env.hdr&lt;/code&gt; from disk&lt;/td&gt;
+&lt;td&gt;Black screen (&lt;code&gt;transition_alpha = 1.0&lt;/code&gt;)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;3–4&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;PBO → GPU texture transfer (DMA) + mipmap generation&lt;/td&gt;
+&lt;td&gt;Black screen&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;5–15&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Progressive IBL computation (luminance, specular, irradiance)&lt;/td&gt;
+&lt;td&gt;Black screen (but spheres are rendered into FBO)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;~16&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;IBL complete → &lt;code&gt;TRANSITION_FADE_IN&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Fade-in begins&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;~20+&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Transition complete — steady state&lt;/td&gt;
+&lt;td&gt;Fully-lit PBR scene&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;Steady-State Frame&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Step&lt;/th&gt;
+&lt;th&gt;Detail&lt;/th&gt;
+&lt;th&gt;Time&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;1. Poll Events&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;glfwPollEvents()&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~0.1ms CPU&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;2. Camera Update&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;60Hz physics + rotation lerp&lt;/td&gt;
+&lt;td&gt;~0.01ms CPU&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;3a. Skybox&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Fullscreen quad, equirect. sampling&lt;/td&gt;
+&lt;td&gt;~0.2ms GPU&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;3b. Bitonic Sort&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Compute shader, 100 spheres&lt;/td&gt;
+&lt;td&gt;~0.1ms GPU&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;3c. Billboard Spheres&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;100 ray-traced quads, 1 draw call&lt;/td&gt;
+&lt;td&gt;~0.5ms GPU&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;4a. Bloom&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Downsample → Upsample (if enabled)&lt;/td&gt;
+&lt;td&gt;~0.3ms GPU&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;4b. DoF&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;CoC → Bokeh blur (if enabled)&lt;/td&gt;
+&lt;td&gt;~0.2ms GPU&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;4c. Auto-Exposure&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Luminance reduction&lt;/td&gt;
+&lt;td&gt;~0.1ms GPU&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;4d. Motion Blur&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Tile-max velocity (if enabled)&lt;/td&gt;
+&lt;td&gt;~0.2ms GPU&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;4e. Final Composite&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;9 textures, UBO, fullscreen quad&lt;/td&gt;
+&lt;td&gt;~0.3ms GPU&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;5. UI Overlay&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Text + profiler + transition&lt;/td&gt;
+&lt;td&gt;~0.1ms GPU&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;6. SwapBuffers&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Present to screen&lt;/td&gt;
+&lt;td&gt;(wait)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;Typical frame time&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;1–3ms GPU&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h2&gt;Chapter 12 — GPU Memory Budget&lt;/h2&gt;
+&lt;p&gt;Here's an estimate of &lt;a href="#glossary-vram" title="Dedicated GPU memory — where textures and buffers reside"&gt;VRAM&lt;/a&gt; consumption at steady state:&lt;/p&gt;
+&lt;h3&gt;Textures&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Resource&lt;/th&gt;
+&lt;th&gt;Resolution&lt;/th&gt;
+&lt;th&gt;Format&lt;/th&gt;
+&lt;th&gt;Size&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;HDR Environment&lt;/td&gt;
+&lt;td&gt;2048×1024&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RGBA16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~16 MB (with mips)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Specular Prefilter&lt;/td&gt;
+&lt;td&gt;1024² × 5 mips&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RGBA16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~10.5 MB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Irradiance&lt;/td&gt;
+&lt;td&gt;64×64&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RGBA16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~32 KB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;BRDF LUT&lt;/td&gt;
+&lt;td&gt;512×512&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RG16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~1 MB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Scene Color (FBO)&lt;/td&gt;
+&lt;td&gt;1920×1080&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RGBA16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~16 MB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Velocity (FBO)&lt;/td&gt;
+&lt;td&gt;1920×1080&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RG16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~8 MB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Depth/Stencil (FBO)&lt;/td&gt;
+&lt;td&gt;1920×1080&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_DEPTH32F_STENCIL8&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~10 MB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Bloom chain (6 mips)&lt;/td&gt;
+&lt;td&gt;Various&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RGBA16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~21 MB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;DoF blur&lt;/td&gt;
+&lt;td&gt;1920×1080&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RGBA16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~16 MB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Auto-Exposure&lt;/td&gt;
+&lt;td&gt;64×64 → 1×1&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_R32F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~16 KB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;SH Probes (7 tex)&lt;/td&gt;
+&lt;td&gt;21×21×3&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GL_RGBA16F&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;~74 KB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;Buffers&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Resource&lt;/th&gt;
+&lt;th&gt;Count&lt;/th&gt;
+&lt;th&gt;Size Each&lt;/th&gt;
+&lt;th&gt;Total&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Billboard quad VBO&lt;/td&gt;
+&lt;td&gt;4 verts&lt;/td&gt;
+&lt;td&gt;12 B (vec3)&lt;/td&gt;
+&lt;td&gt;48 B&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Instance VBO&lt;/td&gt;
+&lt;td&gt;100 instances&lt;/td&gt;
+&lt;td&gt;~88 B&lt;/td&gt;
+&lt;td&gt;~8.6 KB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sort SSBO&lt;/td&gt;
+&lt;td&gt;100 entries&lt;/td&gt;
+&lt;td&gt;8 B&lt;/td&gt;
+&lt;td&gt;~800 B&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Fullscreen quad VBO&lt;/td&gt;
+&lt;td&gt;6 verts&lt;/td&gt;
+&lt;td&gt;20 B&lt;/td&gt;
+&lt;td&gt;120 B&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;UBO (post-process)&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;~256 B&lt;/td&gt;
+&lt;td&gt;256 B&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;Total Estimate&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Category&lt;/th&gt;
+&lt;th&gt;Approximate&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Textures&lt;/td&gt;
+&lt;td&gt;~99 MB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Buffers&lt;/td&gt;
+&lt;td&gt;~40 KB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Shaders (compiled)&lt;/td&gt;
+&lt;td&gt;~2 MB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Total&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;~101 MB VRAM&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;💡 Dominant Cost&lt;/strong&gt;: The &lt;a href="#glossary-hdr" title="High Dynamic Range — color values exceeding 1.0 (realistic light intensities)"&gt;HDR&lt;/a&gt; environment map + &lt;a href="#glossary-bloom" title="Glow halo around very bright areas (lens light diffusion)"&gt;bloom&lt;/a&gt; chain + scene FBOs dominate VRAM usage. The geometry itself (100 &lt;a href="#glossary-billboard" title="Screen-facing quad used here as a ray-tracing surface"&gt;billboard&lt;/a&gt; quads × 4 vertices in default mode) is negligible — the real sphere computation happens in the &lt;a href="#glossary-fragment-shader" title="Shader that computes the color of each on-screen pixel"&gt;fragment shader&lt;/a&gt; via &lt;a href="#glossary-ray-tracing" title="Technique that traces light rays to compute intersections with objects"&gt;ray-tracing&lt;/a&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2&gt;Gallery: Multi-Angle Views&lt;/h2&gt;
+&lt;p&gt;The engine supports automated captures from different camera angles, used for visual regression testing:&lt;/p&gt;
+&lt;table style="width:100%; border-collapse:collapse; border:none;"&gt;
+&lt;tr&gt;
+&lt;td style="text-align:center; padding:8px; border:none;"&gt;&lt;img src="/images/suckless-ogl/ref_front.png" alt="Front view" style="max-width:100%;"&gt;&lt;br&gt;&lt;em&gt;Front&lt;/em&gt;&lt;/td&gt;
+&lt;td style="text-align:center; padding:8px; border:none;"&gt;&lt;img src="/images/suckless-ogl/ref_left.png" alt="Left view" style="max-width:100%;"&gt;&lt;br&gt;&lt;em&gt;Left&lt;/em&gt;&lt;/td&gt;
+&lt;td style="text-align:center; padding:8px; border:none;"&gt;&lt;img src="/images/suckless-ogl/ref_right.png" alt="Right view" style="max-width:100%;"&gt;&lt;br&gt;&lt;em&gt;Right&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="text-align:center; padding:8px; border:none;"&gt;&lt;img src="/images/suckless-ogl/ref_top.png" alt="Top view" style="max-width:100%;"&gt;&lt;br&gt;&lt;em&gt;Top&lt;/em&gt;&lt;/td&gt;
+&lt;td style="text-align:center; padding:8px; border:none;"&gt;&lt;img src="/images/suckless-ogl/ref_bottom.png" alt="Bottom view" style="max-width:100%;"&gt;&lt;br&gt;&lt;em&gt;Bottom&lt;/em&gt;&lt;/td&gt;
+&lt;td style="text-align:center; padding:8px; border:none;"&gt;&lt;img src="/images/suckless-ogl/ref_front_sony_a7siii.png" alt="Sony A7S III Profile" style="max-width:100%;"&gt;&lt;br&gt;&lt;em&gt;Sony A7S III&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;Full Data Flow Pipeline&lt;/h2&gt;
+&lt;pre class="mermaid"&gt;
+graph TD
+    POLL["① CPU — glfwPollEvents()"] --&gt; TIME["② CPU — Δt calculation"]
+    TIME --&gt; CAM["③ CPU — Camera physics 60Hz"]
+    CAM --&gt; SORT["④ CPU → GPU — Sphere sorting"]
+    SORT --&gt; FBO["⑤ GPU — Bind Scene FBO, Clear"]
+    FBO --&gt; SKY["🌅 Skybox Pass — Equirectangular sampling"]
+    SKY --&gt; SPHERES["🔮 Billboard Pass — 1 draw call, 100 instances, ray-tracing"]
+    SPHERES --&gt; BLOOM["✨ Bloom + DoF + Auto-Exposure + Motion Blur"]
+    BLOOM --&gt; COMP["🎬 Final Composite — 9 textures, UBO, fullscreen quad"]
+    COMP --&gt; UI["🖥️ UI Overlay + Profiler + Transition"]
+    UI --&gt; SWAP["⑩ glfwSwapBuffers()"]
+&lt;/pre&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;Glossary&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Quick reference for technical terms used in this article, with links to official documentation.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3&gt;Languages, APIs &amp;amp; Standards&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Term&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Link&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-c11"&gt;&lt;/a&gt;&lt;strong&gt;C11&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;2011 revision of the C language standard, used for the entire engine&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.cppreference.com/w/c/11"&gt;cppreference — C11&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-opengl-44"&gt;&lt;/a&gt;&lt;strong&gt;OpenGL 4.4&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Low-level graphics API for communicating with the GPU&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://registry.khronos.org/OpenGL/specs/gl/glspec44.core.pdf"&gt;OpenGL 4.4 Spec (Khronos)&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-core-profile"&gt;&lt;/a&gt;&lt;strong&gt;Core Profile&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;OpenGL mode that removes deprecated functions (fixed-function pipeline)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/OpenGL_Context#OpenGL_3.1_and_ARB_compatibility"&gt;OpenGL Wiki — Core Profile&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-glsl"&gt;&lt;/a&gt;&lt;strong&gt;GLSL&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;OpenGL Shading Language&lt;/em&gt; — the language for GPU programs (shaders)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.40.pdf"&gt;GLSL Spec (Khronos)&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-glfw"&gt;&lt;/a&gt;&lt;strong&gt;GLFW&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;C library for creating windows and handling keyboard/mouse input&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.glfw.org/documentation.html"&gt;glfw.org&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-glad"&gt;&lt;/a&gt;&lt;strong&gt;GLAD&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;OpenGL loader generator — resolves GL function addresses at runtime&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://glad.dav1d.de/"&gt;GLAD Generator&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-glx"&gt;&lt;/a&gt;&lt;strong&gt;GLX&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;X11 extension bridging the Window System and OpenGL on Linux&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://registry.khronos.org/OpenGL/specs/gl/glx1.4.pdf"&gt;GLX Spec (Khronos)&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-x11"&gt;&lt;/a&gt;&lt;strong&gt;X11&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Historic Linux windowing system (display server)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.x.org/wiki/"&gt;X.Org&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-mesa"&gt;&lt;/a&gt;&lt;strong&gt;Mesa&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Open-source implementation of graphics APIs (OpenGL, Vulkan) on Linux&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.mesa3d.org/"&gt;mesa3d.org&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;3D Rendering — Core Concepts&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Term&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Link&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-pbr"&gt;&lt;/a&gt;&lt;strong&gt;PBR&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Physically-Based Rendering&lt;/em&gt; — lighting model that simulates real physics of light&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/Theory"&gt;learnopengl.com — PBR Theory&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-ibl"&gt;&lt;/a&gt;&lt;strong&gt;IBL&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Image-Based Lighting&lt;/em&gt; — lighting extracted from a panoramic HDR environment image&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/IBL/Diffuse-irradiance"&gt;learnopengl.com — IBL&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-hdr"&gt;&lt;/a&gt;&lt;strong&gt;HDR&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;High Dynamic Range&lt;/em&gt; — color values exceeding 1.0 (realistic light intensities)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Advanced-Lighting/HDR"&gt;learnopengl.com — HDR&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-ldr"&gt;&lt;/a&gt;&lt;strong&gt;LDR&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Low Dynamic Range&lt;/em&gt; — color values 0–255, what the screen actually displays&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Advanced-Lighting/HDR"&gt;learnopengl.com — HDR&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-shader"&gt;&lt;/a&gt;&lt;strong&gt;Shader&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Program executed directly on the GPU (vertex, fragment, compute)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Shader"&gt;OpenGL Wiki — Shader&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-vertex-shader"&gt;&lt;/a&gt;&lt;strong&gt;Vertex Shader&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Shader that processes each geometry vertex (position, projection)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Vertex_Shader"&gt;OpenGL Wiki — Vertex Shader&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-fragment-shader"&gt;&lt;/a&gt;&lt;strong&gt;Fragment Shader&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Shader that computes the color of each on-screen pixel&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Fragment_Shader"&gt;OpenGL Wiki — Fragment Shader&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-compute-shader"&gt;&lt;/a&gt;&lt;strong&gt;Compute Shader&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;General-purpose GPU shader outside the rendering pipeline&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Compute_Shader"&gt;OpenGL Wiki — Compute Shader&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-skybox"&gt;&lt;/a&gt;&lt;strong&gt;Skybox&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Panoramic image displayed as scene background (sky/environment)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Advanced-OpenGL/Cubemaps"&gt;learnopengl.com — Cubemaps&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-rasterization"&gt;&lt;/a&gt;&lt;strong&gt;Rasterization&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Process of converting 3D triangles into 2D pixels on screen&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Rasterization"&gt;OpenGL Wiki — Rasterization&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-draw-call"&gt;&lt;/a&gt;&lt;strong&gt;Draw Call&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;A CPU→GPU call requesting geometry rendering&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview"&gt;OpenGL Wiki — Rendering Pipeline&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-instanced-rendering"&gt;&lt;/a&gt;&lt;strong&gt;Instanced Rendering&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Technique to draw N copies of an object in a single draw call&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Vertex_Rendering#Instancing"&gt;OpenGL Wiki — Instancing&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-mipmap"&gt;&lt;/a&gt;&lt;strong&gt;Mipmap&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Pre-reduced versions of a texture (½, ¼, ⅛…) for cleaner filtering at distance&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Texture#Mip_maps"&gt;OpenGL Wiki — Texture#Mip_maps&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;OpenGL GPU Objects&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Term&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Link&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-fbo"&gt;&lt;/a&gt;&lt;strong&gt;FBO&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Framebuffer Object&lt;/em&gt; — offscreen render surface (draw to it instead of the screen)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Framebuffer_Object"&gt;OpenGL Wiki — Framebuffer Object&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-mrt"&gt;&lt;/a&gt;&lt;strong&gt;MRT&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Multiple Render Targets&lt;/em&gt; — write to several textures in a single render pass&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Framebuffer_Object#Multiple_Render_Targets"&gt;OpenGL Wiki — MRT&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-vao"&gt;&lt;/a&gt;&lt;strong&gt;VAO&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Vertex Array Object&lt;/em&gt; — describes the format of geometric data sent to the GPU&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_Array_Object"&gt;OpenGL Wiki — VAO&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-vbo"&gt;&lt;/a&gt;&lt;strong&gt;VBO&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Vertex Buffer Object&lt;/em&gt; — GPU buffer containing vertex positions, normals, etc.&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_Buffer_Object"&gt;OpenGL Wiki — VBO&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-ssbo"&gt;&lt;/a&gt;&lt;strong&gt;SSBO&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Shader Storage Buffer Object&lt;/em&gt; — read/write GPU buffer accessible from shaders&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Shader_Storage_Buffer_Object"&gt;OpenGL Wiki — SSBO&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-ubo"&gt;&lt;/a&gt;&lt;strong&gt;UBO&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Uniform Buffer Object&lt;/em&gt; — data block shared between CPU and shaders&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Uniform_Buffer_Object"&gt;OpenGL Wiki — UBO&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-pbo"&gt;&lt;/a&gt;&lt;strong&gt;PBO&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Pixel Buffer Object&lt;/em&gt; — buffer for asynchronous CPU↔GPU pixel transfers&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Pixel_Buffer_Object"&gt;OpenGL Wiki — PBO&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-texture-view"&gt;&lt;/a&gt;&lt;strong&gt;Texture View&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Alternate view of an existing texture's data (different format or layers)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Texture_Storage#Texture_views"&gt;OpenGL Wiki — Texture View&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;Ray-Tracing &amp;amp; Geometry&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Term&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Link&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-ray-tracing"&gt;&lt;/a&gt;&lt;strong&gt;Ray-Tracing&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Technique that traces light rays to compute intersections with objects&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html"&gt;Scratchapixel — Ray-Sphere&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-billboard"&gt;&lt;/a&gt;&lt;strong&gt;Billboard&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Screen-facing quad used here as a ray-tracing surface&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Billboards"&gt;OpenGL Wiki — Billboard&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-aabb"&gt;&lt;/a&gt;&lt;strong&gt;AABB&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Axis-Aligned Bounding Box&lt;/em&gt; — axis-aligned enclosing box for fast culling&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Minimum_bounding_box#Axis-aligned_minimum_bounding_box"&gt;Wikipedia — AABB&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-icosphere"&gt;&lt;/a&gt;&lt;strong&gt;Icosphere&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Sphere built by subdividing an icosahedron (20 faces) — more uniform than a UV sphere&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Geodesic_polyhedron"&gt;Wikipedia — Icosphere&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-discriminant"&gt;&lt;/a&gt;&lt;strong&gt;Discriminant&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Mathematical value (b²−c) determining whether a ray hits a sphere&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html"&gt;Scratchapixel — Ray-Sphere&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-normal"&gt;&lt;/a&gt;&lt;strong&gt;Normal&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Vector perpendicular to the surface at a point — determines surface orientation&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Lighting/Basic-Lighting"&gt;learnopengl.com — Basic Lighting&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-tessellation"&gt;&lt;/a&gt;&lt;strong&gt;Tessellation&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Subdividing geometry into finer triangles for more detail&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Tessellation"&gt;OpenGL Wiki — Tessellation&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-mesh"&gt;&lt;/a&gt;&lt;strong&gt;Mesh&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Collection of triangles forming a 3D object&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Polygon_mesh"&gt;Wikipedia — Polygon mesh&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-quad"&gt;&lt;/a&gt;&lt;strong&gt;Quad&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Rectangle made of 2 triangles — the basic 2D primitive&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Getting-started/Hello-Triangle"&gt;learnopengl.com — Hello Triangle&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;PBR &amp;amp; Lighting&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Term&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Link&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-brdf"&gt;&lt;/a&gt;&lt;strong&gt;BRDF&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Bidirectional Reflectance Distribution Function&lt;/em&gt; — describes how light bounces off a surface&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/Theory"&gt;learnopengl.com — PBR Theory&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-brdf-lut"&gt;&lt;/a&gt;&lt;strong&gt;BRDF LUT&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Pre-computed texture encoding the BRDF integral for all (angle, roughness) combinations&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/IBL/Specular-IBL"&gt;learnopengl.com — Specular IBL&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-fresnel-schlick"&gt;&lt;/a&gt;&lt;strong&gt;Fresnel-Schlick&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Approximation of the Fresnel effect: surfaces reflect more at grazing angles&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/Theory"&gt;learnopengl.com — PBR Theory&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-ggx---smith-ggx"&gt;&lt;/a&gt;&lt;strong&gt;GGX / Smith-GGX&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Microfacet model for geometry and normal distribution (roughness)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/Theory"&gt;learnopengl.com — PBR Theory&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-ndf"&gt;&lt;/a&gt;&lt;strong&gt;NDF&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Normal Distribution Function&lt;/em&gt; — statistical distribution of microfacet orientations&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/Theory"&gt;learnopengl.com — PBR Theory&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-albedo"&gt;&lt;/a&gt;&lt;strong&gt;Albedo&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Base color of a material (without lighting)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/Theory"&gt;learnopengl.com — PBR Theory&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-metallic"&gt;&lt;/a&gt;&lt;strong&gt;Metallic&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;PBR parameter: 0 = dielectric (plastic, wood), 1 = metal (gold, chrome)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/Theory"&gt;learnopengl.com — PBR Theory&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-roughness"&gt;&lt;/a&gt;&lt;strong&gt;Roughness&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;PBR parameter: 0 = perfect mirror, 1 = completely matte&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/Theory"&gt;learnopengl.com — PBR Theory&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-ao"&gt;&lt;/a&gt;&lt;strong&gt;AO&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Ambient Occlusion&lt;/em&gt; — darkens crevices and corners (ambient light occlusion)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Advanced-Lighting/SSAO"&gt;learnopengl.com — SSAO&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-dielectric"&gt;&lt;/a&gt;&lt;strong&gt;Dielectric&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Non-metallic material (plastic, glass, wood) — reflects little at direct angles&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/Theory"&gt;learnopengl.com — PBR Theory&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-irradiance-map"&gt;&lt;/a&gt;&lt;strong&gt;Irradiance Map&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Texture encoding hemisphere-integrated diffuse ambient light for each direction&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/IBL/Diffuse-irradiance"&gt;learnopengl.com — Diffuse Irradiance&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-specular-prefilter"&gt;&lt;/a&gt;&lt;strong&gt;Specular Prefilter&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Mip-mapped texture encoding blurred reflections by roughness level&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/PBR/IBL/Specular-IBL"&gt;learnopengl.com — Specular IBL&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-equirectangular"&gt;&lt;/a&gt;&lt;strong&gt;Equirectangular&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;2D projection of a sphere (like a world map) — the format of &lt;code&gt;.hdr&lt;/code&gt; images&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Equirectangular_projection"&gt;Wikipedia — Equirectangular&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-sh-probes"&gt;&lt;/a&gt;&lt;strong&gt;SH Probes&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Spherical Harmonics&lt;/em&gt; — compact representation of a low-frequency light field&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Spherical_harmonic_lighting"&gt;Wikipedia — SH Lighting&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;Post-Processing&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Term&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Link&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-bloom"&gt;&lt;/a&gt;&lt;strong&gt;Bloom&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Glow halo around very bright areas (lens light diffusion)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Advanced-Lighting/Bloom"&gt;learnopengl.com — Bloom&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-depth-of-field-dof"&gt;&lt;/a&gt;&lt;strong&gt;Depth of Field (DoF)&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Blur of objects outside the focus distance&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Depth_of_field"&gt;Wikipedia — Depth of field&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-coc"&gt;&lt;/a&gt;&lt;strong&gt;CoC&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Circle of Confusion&lt;/em&gt; — blur disc diameter for an out-of-focus point&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Circle_of_confusion"&gt;Wikipedia — CoC&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-bokeh"&gt;&lt;/a&gt;&lt;strong&gt;Bokeh&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Aesthetic shape of background blur (discs, hexagons…)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Bokeh"&gt;Wikipedia — Bokeh&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-motion-blur"&gt;&lt;/a&gt;&lt;strong&gt;Motion Blur&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Per-pixel motion blur simulating a camera shutter&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-27-motion-blur-post-processing-effect"&gt;GPU Gems — Motion Blur&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-fxaa"&gt;&lt;/a&gt;&lt;strong&gt;FXAA&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Fast Approximate Anti-Aliasing&lt;/em&gt; — fast post-process anti-aliasing on the final image&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://developer.download.nvidia.com/assets/gamedev/files/sdk/11/FXAA_WhitePaper.pdf"&gt;NVIDIA — FXAA&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-msaa"&gt;&lt;/a&gt;&lt;strong&gt;MSAA&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Multisample Anti-Aliasing&lt;/em&gt; — geometric anti-aliasing (expensive, avoided here)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Multisampling"&gt;OpenGL Wiki — Multisampling&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-tonemapping"&gt;&lt;/a&gt;&lt;strong&gt;Tonemapping&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Conversion of HDR colors (unbounded) to displayable LDR (0–255)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Advanced-Lighting/HDR"&gt;learnopengl.com — HDR&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-color-grading"&gt;&lt;/a&gt;&lt;strong&gt;Color Grading&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Creative color adjustments (saturation, contrast, gamma, hue)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Color_grading"&gt;Wikipedia — Color grading&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-3d-lut"&gt;&lt;/a&gt;&lt;strong&gt;3D LUT&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;3D color lookup table for a cinematic "look" (&lt;code&gt;.cube&lt;/code&gt; file)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/3D_lookup_table"&gt;Wikipedia — 3D LUT&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-vignette"&gt;&lt;/a&gt;&lt;strong&gt;Vignette&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Progressive darkening of image edges (lens effect)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Vignetting"&gt;Wikipedia — Vignetting&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-dithering"&gt;&lt;/a&gt;&lt;strong&gt;Dithering&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Adding imperceptible noise to break banding artifacts in gradients&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Dither"&gt;Wikipedia — Dither&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-auto-exposure"&gt;&lt;/a&gt;&lt;strong&gt;Auto-Exposure&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Automatic scene brightness adaptation (simulates the eye's iris)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Advanced-Lighting/HDR"&gt;learnopengl.com — HDR&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-vsync"&gt;&lt;/a&gt;&lt;strong&gt;VSync&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Vertical Sync&lt;/em&gt; — syncs rendering with screen refresh (prevents tearing)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Screen_tearing#V-sync"&gt;Wikipedia — VSync&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;Architecture &amp;amp; Performance&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Term&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Link&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-simd"&gt;&lt;/a&gt;&lt;strong&gt;SIMD&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Single Instruction, Multiple Data&lt;/em&gt; — vector computation (1 instruction processes 4+ values)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Single_instruction,_multiple_data"&gt;Wikipedia — SIMD&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-sse"&gt;&lt;/a&gt;&lt;strong&gt;SSE&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Intel/AMD SIMD extensions for x86 (128-bit registers)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html"&gt;Intel — SSE Intrinsics&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-neon"&gt;&lt;/a&gt;&lt;strong&gt;NEON&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;ARM SIMD extensions (smartphones, Apple Silicon, Raspberry Pi)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://developer.arm.com/Architectures/Neon"&gt;ARM — NEON&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-vram"&gt;&lt;/a&gt;&lt;strong&gt;VRAM&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Dedicated GPU memory — where textures and buffers reside&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Video_RAM_(dual-ported_DRAM)"&gt;Wikipedia — VRAM&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-dma"&gt;&lt;/a&gt;&lt;strong&gt;DMA&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Direct Memory Access&lt;/em&gt; — data transfer without CPU involvement&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Direct_memory_access"&gt;Wikipedia — DMA&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-cache-friendly"&gt;&lt;/a&gt;&lt;strong&gt;Cache-friendly&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Memory layout that minimizes CPU cache misses (contiguous data)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/CPU_cache#Cache-friendly_code"&gt;Wikipedia — Cache&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-lru-cache"&gt;&lt;/a&gt;&lt;strong&gt;LRU Cache&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Least Recently Used&lt;/em&gt; — cache that evicts the least recently used entry&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_(LRU)"&gt;Wikipedia — LRU&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-fence-glsync"&gt;&lt;/a&gt;&lt;strong&gt;Fence (GLSync)&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;GPU sync object — lets you wait for GPU work to complete&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Sync_Object"&gt;OpenGL Wiki — Sync Object&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-memory-barrier"&gt;&lt;/a&gt;&lt;strong&gt;Memory Barrier&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;GPU instruction ensuring previous writes are visible before subsequent reads&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Memory_Model#Explicit_memory_barriers"&gt;OpenGL Wiki — Memory Barrier&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-work-group"&gt;&lt;/a&gt;&lt;strong&gt;Work Group&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Group of GPU threads executed together in a compute shader (e.g. 16×16 = 256 threads)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Compute_Shader#Compute_space"&gt;OpenGL Wiki — Compute Shader&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-dispatch"&gt;&lt;/a&gt;&lt;strong&gt;Dispatch&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;CPU call that launches a compute shader on the GPU&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://www.khronos.org/opengl/wiki/Compute_Shader#Dispatch"&gt;OpenGL Wiki — Compute Shader&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;Mathematics &amp;amp; Camera&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Term&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Link&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-mat4---vec3"&gt;&lt;/a&gt;&lt;strong&gt;mat4 / vec3&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;4×4 matrix and 3D vector — fundamental 3D types&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://cglm.readthedocs.io/en/latest/"&gt;cglm docs&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-fov"&gt;&lt;/a&gt;&lt;strong&gt;FOV&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Field of View&lt;/em&gt; — camera viewing angle (60° here)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Field_of_view"&gt;Wikipedia — FOV&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-view-matrix"&gt;&lt;/a&gt;&lt;strong&gt;View Matrix&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Transforms world coordinates into camera coordinates (&lt;code&gt;lookAt&lt;/code&gt;)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Getting-started/Camera"&gt;learnopengl.com — Camera&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-projection-matrix"&gt;&lt;/a&gt;&lt;strong&gt;Projection Matrix&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Transforms 3D to 2D with perspective (far objects = smaller)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Getting-started/Coordinate-Systems"&gt;learnopengl.com — Coordinate Systems&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-yaw---pitch"&gt;&lt;/a&gt;&lt;strong&gt;Yaw / Pitch&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Yaw = left-right rotation, Pitch = up-down rotation of the camera&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Getting-started/Camera"&gt;learnopengl.com — Camera&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-lerp"&gt;&lt;/a&gt;&lt;strong&gt;Lerp&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Linear Interpolation&lt;/em&gt; — smooth transition between two values: &lt;code&gt;a + t × (b − a)&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Linear_interpolation"&gt;Wikipedia — Lerp&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-ema"&gt;&lt;/a&gt;&lt;strong&gt;EMA&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;Exponential Moving Average&lt;/em&gt; — weighted average favoring recent values&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Exponential_smoothing"&gt;Wikipedia — EMA&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-smoothstep"&gt;&lt;/a&gt;&lt;strong&gt;Smoothstep&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;S-curve interpolation function (smooth transition between 0 and 1)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/smoothstep.xhtml"&gt;Khronos — smoothstep&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-z-buffer---depth-buffer"&gt;&lt;/a&gt;&lt;strong&gt;Z-buffer / Depth Buffer&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Texture storing per-pixel depth to handle occlusion&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Advanced-OpenGL/Depth-testing"&gt;learnopengl.com — Depth Testing&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-stencil-buffer"&gt;&lt;/a&gt;&lt;strong&gt;Stencil Buffer&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Per-pixel mask restricting rendering to specific areas&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://learnopengl.com/Advanced-OpenGL/Stencil-testing"&gt;learnopengl.com — Stencil&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;Sorting Algorithms&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Term&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Link&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-bitonic-sort"&gt;&lt;/a&gt;&lt;strong&gt;Bitonic Sort&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Parallel sort suited for GPUs — compares and swaps in pairs&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Bitonic_sorter"&gt;Wikipedia — Bitonic sort&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-radix-sort"&gt;&lt;/a&gt;&lt;strong&gt;Radix Sort&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Sort by successive digits — O(n·k), efficient on CPU for integer keys&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Radix_sort"&gt;Wikipedia — Radix sort&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-back-to-front"&gt;&lt;/a&gt;&lt;strong&gt;Back-to-front&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Rendering order from farthest to nearest, required for correct transparency&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Painter%27s_algorithm"&gt;Wikipedia — Painter's algorithm&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;Multithreading&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Term&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Link&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-posix-threads"&gt;&lt;/a&gt;&lt;strong&gt;POSIX Threads&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Standard threading API on Unix/Linux (&lt;code&gt;pthread_create&lt;/code&gt;, &lt;code&gt;pthread_cond_wait&lt;/code&gt;)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://man7.org/linux/man-pages/man7/pthreads.7.html"&gt;man — pthreads&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-async-loading"&gt;&lt;/a&gt;&lt;strong&gt;Async Loading&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Running disk I/O on a separate thread to avoid blocking the render loop&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Asynchronous_I/O"&gt;Wikipedia — Async I/O&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-condition-variable"&gt;&lt;/a&gt;&lt;strong&gt;Condition Variable&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Sync mechanism: a thread sleeps until another signals it&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://man7.org/linux/man-pages/man3/pthread_cond_wait.3p.html"&gt;man — pthread_cond_wait&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;Miscellaneous&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Term&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Link&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-tracy"&gt;&lt;/a&gt;&lt;strong&gt;Tracy&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Real-time profiler for games and graphics apps (per-frame CPU + GPU measurement)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://github.com/wolfpld/tracy"&gt;Tracy Profiler (GitHub)&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-cglm"&gt;&lt;/a&gt;&lt;strong&gt;cglm&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;SIMD-optimized C math library for 3D (matrices, vectors, quaternions)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://github.com/recp/cglm"&gt;cglm (GitHub)&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-stbimage"&gt;&lt;/a&gt;&lt;strong&gt;stb_image&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Single-header C library for loading images (PNG, JPEG, HDR…)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://github.com/nothings/stb"&gt;stb (GitHub)&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-fixed-timestep"&gt;&lt;/a&gt;&lt;strong&gt;Fixed Timestep&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Physics update at a constant interval (e.g. 60 Hz) regardless of framerate&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://gafferongames.com/post/fix_your_timestep/"&gt;Fix Your Timestep! (Fiedler)&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-game-loop"&gt;&lt;/a&gt;&lt;strong&gt;Game Loop&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Main application loop: read input → update → render → repeat&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://gameprogrammingpatterns.com/game-loop.html"&gt;Game Programming Patterns — Game Loop&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-fireflies"&gt;&lt;/a&gt;&lt;strong&gt;Fireflies&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Ultra-bright aberrant pixels caused by extreme HDR values (artifact)&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://pbr-book.org/4ed/Sampling_and_Reconstruction/Filtering_Image_Samples#FireflyPrevention"&gt;Physically Based — Fireflies&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a id="glossary-premultiplied-alpha"&gt;&lt;/a&gt;&lt;strong&gt;Premultiplied Alpha&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;Convention where RGB is already multiplied by alpha — enables correct blending&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://en.wikipedia.org/wiki/Alpha_compositing#Straight_versus_premultiplied"&gt;Wikipedia — Premultiplied alpha&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;suckless-ogl&lt;/strong&gt; demonstrates that a complete PBR engine can be built with readable C11 code, a clear rendering pipeline, and GPU performance measured in milliseconds. The design choices — billboard ray-tracing instead of meshes, async HDR loading, progressive IBL, modular post-processing — show how to solve real graphics problems with elegance.&lt;/p&gt;
+&lt;p&gt;The full source code is available on &lt;a href="https://github.com/yoyonel/suckless-ogl"&gt;GitHub&lt;/a&gt;, and the detailed technical documentation at &lt;a href="https://yoyonel.github.io/suckless-ogl/"&gt;yoyonel.github.io/suckless-ogl&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;In upcoming articles, we'll explore the Vulkan and NVRHI projects that push these concepts even further.&lt;/em&gt;&lt;/p&gt;</content><category term="Development"/><category term="OpenGL"/><category term="C"/><category term="PBR"/><category term="IBL"/><category term="3D Rendering"/><category term="GLSL"/><category term="Ray-Tracing"/><category term="Post-Processing"/><category term="Development"/></entry><entry><title>Python "Hello World" - Repl.it</title><link href="https://yoyonel.github.io/en/python-helloworld-replit.html" rel="alternate"/><published>2020-01-08T00:00:00+01:00</published><updated>2020-01-08T00:00:00+01:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-08:/en/python-helloworld-replit.html</id><content type="html">&lt;h1&gt;Print "Hello World!" in Python&lt;/h1&gt;
 &lt;iframe height="400px" width="100%" src="https://repl.it/@lionelatty/BadBigTransfer?lite=true" scrolling="no" frameborder="no" allowtransparency="true" allowfullscreen="true" sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-modals"&gt;&lt;/iframe&gt;</content><category term="Development"/><category term="Python"/><category term="Repl.it"/></entry><entry><title>PyConFR 2019 (Bordeaux) - gRPC/Python - A practical example of using micro-services for a (mini) text analysis application (NLP).</title><link href="https://yoyonel.github.io/en/pyconfr-2019-grpc-python.html" rel="alternate"/><published>2020-01-07T10:23:16.221000+00:00</published><updated>2020-01-07T10:23:16.221000+00:00</updated><author><name>YoYoNeL</name></author><id>tag:yoyonel.github.io,2020-01-07:/en/pyconfr-2019-grpc-python.html</id><summary type="html">&lt;h1&gt;Talk: PyConFR 2019 (Bordeaux) - gRPC/Python&lt;/h1&gt;
 &lt;h2&gt;Conference&lt;/h2&gt;
 &lt;p&gt;&lt;img src="https://pbs.twimg.com/media/EIdCkuEWoAAa7EN?format=jpg&amp;name=900x900" width="400"/&gt;&lt;/p&gt;
