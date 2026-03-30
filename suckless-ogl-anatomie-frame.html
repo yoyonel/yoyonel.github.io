@@ -161,15 +161,15 @@
 
 
   <div>
-    <h1>Anatomie d'une frame : le cycle de vie complet de suckless-ogl</h1>
+    <h1 id="anatomie-dune-frame-le-cycle-de-vie-complet-de-suckless-ogl">Anatomie d'une frame : le cycle de vie complet de suckless-ogl</h1>
 <p><em>De <code>main()</code> aux photons sur l'écran — une plongée complète dans un moteur <a href="#glossary-pbr" title="Physically-Based Rendering — modèle d'éclairage qui simule la physique réelle de la lumière">PBR</a> OpenGL moderne écrit en C.</em></p>
 <p><img alt="Le rendu final de suckless-ogl — 100 sphères PBR éclairées par IBL" src="https://yoyonel.github.io/images/suckless-ogl/reference_image.png">
 <em><center>Le rendu final : 100 sphères métalliques et diélectriques, éclairées par une <a href="#glossary-hdr" title="High Dynamic Range — valeurs de couleur supérieures à 1.0 (lumière réaliste)">HDR</a> d'environnement, avec post-processing complet.</center></em></p>
 <hr>
-<h2>Introduction</h2>
+<h2 id="introduction">Introduction</h2>
 <p><a href="https://github.com/yoyonel/suckless-ogl"><strong>suckless-ogl</strong></a> est un moteur de rendu <a href="#glossary-pbr" title="Physically-Based Rendering — modèle d'éclairage qui simule la physique réelle de la lumière">PBR</a> (Physically-Based Rendering) minimaliste et performant, écrit en <strong>C11</strong> avec <strong>OpenGL 4.4 Core Profile</strong>. Il affiche une grille de <strong>100 sphères</strong> aux matériaux variés (métaux, diélectriques, peintures, organiques…) éclairées par <strong>Image-Based Lighting</strong> (<a href="#glossary-ibl" title="Image-Based Lighting — éclairage extrait d'une image panoramique HDR de l'environnement">IBL</a>), avec un pipeline de post-processing complet : <a href="#glossary-bloom" title="Effet de halo lumineux autour des zones très brillantes (diffusion lumineuse de l'objectif)">bloom</a>, <a href="#glossary-depth-of-field-dof" title="Profondeur de champ — flou des objets hors de la distance de mise au point">depth of field</a>, <a href="#glossary-motion-blur" title="Flou de mouvement par pixel simulant l'obturateur d'une caméra">motion blur</a>, <a href="#glossary-fxaa" title="Fast Approximate Anti-Aliasing — anti-crénelage rapide en post-process sur l'image finale">FXAA</a>, <a href="#glossary-tonemapping" title="Conversion des couleurs HDR (illimitées) en LDR affichable (0–255)">tone mapping</a>, <a href="#glossary-color-grading" title="Ajustement créatif des couleurs (saturation, contraste, gamma, teinte)">color grading</a>…</p>
 <p>Cet article retrace le <strong>cycle de vie complet</strong> de l'application : depuis le premier octet alloué dans <code>main()</code> jusqu'au moment où le GPU présente la première frame complètement éclairée à l'écran. On va traverser <strong>chaque couche</strong> — mémoire CPU, ressources GPU, la poignée de main X11/GLFW, la création du contexte OpenGL, la compilation des shaders, le <a href="#glossary-chargement-asynchrone" title="Exécuter les I/O disque sur un thread séparé pour ne pas bloquer le rendu">chargement asynchrone</a> de textures, et l'architecture de rendu multi-pass qui produit chaque frame.</p>
-<h3>Ce qu'on va couvrir</h3>
+<h3 id="ce-quon-va-couvrir">Ce qu'on va couvrir</h3>
 <table>
 <thead>
 <tr>
@@ -179,57 +179,57 @@
 </thead>
 <tbody>
 <tr>
-<td>1</td>
+<td><a href="#chapitre-1-le-point-dentree">1</a></td>
 <td>Le point d'entrée (<code>main()</code>)</td>
 </tr>
 <tr>
-<td>2</td>
+<td><a href="#chapitre-2-ouvrir-une-fenetre-glfw-x11-opengl">2</a></td>
 <td>Ouverture de fenêtre (GLFW + X11 + OpenGL)</td>
 </tr>
 <tr>
-<td>3</td>
+<td><a href="#chapitre-3-initialisation-cote-cpu">3</a></td>
 <td>Initialisation CPU (caméra, threads, buffers)</td>
 </tr>
 <tr>
-<td>4</td>
+<td><a href="#chapitre-4-initialisation-de-la-scene-le-gpu-se-reveille">4</a></td>
 <td>Initialisation de la scène (GPU)</td>
 </tr>
 <tr>
-<td>5</td>
+<td><a href="#chapitre-5-setup-du-pipeline-de-post-processing">5</a></td>
 <td>Pipeline de post-processing</td>
 </tr>
 <tr>
-<td>6</td>
+<td><a href="#chapitre-6-le-premier-chargement-hdr">6</a></td>
 <td>Chargement HDR asynchrone</td>
 </tr>
 <tr>
-<td>7</td>
+<td><a href="#chapitre-7-generation-ibl-progressive-multi-frame">7</a></td>
 <td>Génération IBL progressive</td>
 </tr>
 <tr>
-<td>8</td>
+<td><a href="#chapitre-8-la-boucle-principale">8</a></td>
 <td>La boucle principale</td>
 </tr>
 <tr>
-<td>9</td>
+<td><a href="#chapitre-9-le-rendu-dune-frame">9</a></td>
 <td>Le rendu d'une frame</td>
 </tr>
 <tr>
-<td>10</td>
+<td><a href="#chapitre-10-pipeline-de-post-processing">10</a></td>
 <td>Post-processing en détail</td>
 </tr>
 <tr>
-<td>11</td>
+<td><a href="#chapitre-11-la-premiere-frame-visible">11</a></td>
 <td>La première frame visible</td>
 </tr>
 <tr>
-<td>12</td>
+<td><a href="#chapitre-12-budget-memoire-gpu">12</a></td>
 <td>Budget mémoire GPU</td>
 </tr>
 </tbody>
 </table>
 <hr>
-<h2>Chapitre 1 — Le point d'entrée</h2>
+<h2 id="chapitre-1-le-point-dentree">Chapitre 1 — Le point d'entrée</h2>
 <p>Tout commence dans <code>main()</code> (<a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/main.c">src/main.c</a>) :</p>
 <div class="highlight"><pre><span></span><code><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span>
 <span class="p">{</span>
@@ -258,7 +258,7 @@
 </code></pre></div>
 
 <p>Le design est <strong>volontairement simple</strong> — toute la complexité est encapsulée dans <code>app_init()</code> → <code>app_run()</code> → <code>app_cleanup()</code>.</p>
-<h3>Décisions de design</h3>
+<h3 id="decisions-de-design">Décisions de design</h3>
 <table>
 <thead>
 <tr>
@@ -287,27 +287,37 @@
 </table>
 <pre class="mermaid">
 graph TD
-    A["🚀 main()"] --> B["app_init()"]
-    B --> B1["Fenêtre + Contexte OpenGL"]
-    B --> B2["Caméra & Entrées"]
-    B --> B3["Scène — Ressources GPU"]
-    B --> B4["Thread de chargement async"]
-    B --> B5["Pipeline Post-Processing"]
-    B --> B6["Systèmes de profiling"]
-    B1 & B2 & B3 & B4 & B5 & B6 --> C["app_run() — Boucle principale"]
-    C --> C1["Poll Events"]
-    C1 --> C2["Physique caméra"]
-    C2 --> C3["renderer_draw_frame()"]
-    C3 --> C4["SwapBuffers"]
+    A("🚀 main()") --> B("app_init()")
+    B --> B1("Fenêtre + Contexte OpenGL")
+    B --> B2("Caméra & Entrées")
+    B --> B3("Scène — Ressources GPU")
+    B --> B4("Thread de chargement async")
+    B --> B5("Pipeline Post-Processing")
+    B --> B6("Systèmes de profiling")
+    B1 & B2 & B3 & B4 & B5 & B6 --> C("app_run() — Boucle principale")
+    C --> C1("Poll Events")
+    C1 --> C2("Physique caméra")
+    C2 --> C3("renderer_draw_frame()")
+    C3 --> C4("SwapBuffers")
     C4 -->|"frame suivante"| C1
-    C --> D["app_cleanup()"]
-    D --> E["🏁 Fin"]
+    C --> D("app_cleanup()")
+    D --> E("🏁 Fin")
+
+    classDef entryExit fill:#fce4ec,stroke:#c2185b,stroke-width:2.5px,color:#2d2d2d
+    classDef keyFunc fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef subsystem fill:#ffffff,stroke:#aaaaaa,stroke-width:1.5px,color:#444444
+    classDef loopNode fill:#e3f2fd,stroke:#42a5f5,stroke-width:1.5px,color:#2d2d2d
+
+    class A,E entryExit
+    class B,C,D keyFunc
+    class B1,B2,B3,B4,B5,B6 subsystem
+    class C1,C2,C3,C4 loopNode
 </pre>
 
 <hr>
-<h2>Chapitre 2 — Ouvrir une fenêtre (<a href="#glossary-glfw" title="Bibliothèque C pour créer des fenêtres et gérer les entrées clavier/souris">GLFW</a> + <a href="#glossary-x11" title="Système de fenêtrage historique de Linux (serveur d'affichage)">X11</a> + <a href="#glossary-opengl-44" title="API graphique bas-niveau pour communiquer avec le GPU">OpenGL</a>)</h2>
+<h2 id="chapitre-2-ouvrir-une-fenetre-glfw-x11-opengl">Chapitre 2 — Ouvrir une fenêtre (<a href="#glossary-glfw" title="Bibliothèque C pour créer des fenêtres et gérer les entrées clavier/souris">GLFW</a> + <a href="#glossary-x11" title="Système de fenêtrage historique de Linux (serveur d'affichage)">X11</a> + <a href="#glossary-opengl-44" title="API graphique bas-niveau pour communiquer avec le GPU">OpenGL</a>)</h2>
 <p>Le premier vrai travail se fait dans <code>window_create()</code> (<a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/window.c">src/window.c</a>).</p>
-<h3>2.1 — Initialisation <a href="#glossary-glfw" title="Bibliothèque C pour créer des fenêtres et gérer les entrées clavier/souris">GLFW</a> et <a href="#glossary-window-hints" title="Paramètres GLFW configurés avant la création de la fenêtre (version OpenGL, profil, MSAA…)">Window Hints</a></h3>
+<h3 id="21-initialisation-glfw-et-window-hints">2.1 — Initialisation <a href="#glossary-glfw" title="Bibliothèque C pour créer des fenêtres et gérer les entrées clavier/souris">GLFW</a> et <a href="#glossary-window-hints" title="Paramètres GLFW configurés avant la création de la fenêtre (version OpenGL, profil, MSAA…)">Window Hints</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">glfwInit</span><span class="p">();</span>
 <span class="n">glfwWindowHint</span><span class="p">(</span><span class="n">GLFW_CONTEXT_VERSION_MAJOR</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
 <span class="n">glfwWindowHint</span><span class="p">(</span><span class="n">GLFW_CONTEXT_VERSION_MINOR</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span><span class="w">          </span><span class="c1">// OpenGL 4.4</span>
@@ -341,26 +351,26 @@ sequenceDiagram
     Mesa->>GPU: Bind du contexte au thread appelant
 </pre>
 
-<h3>2.2 — GLAD : chargement des pointeurs de fonctions OpenGL</h3>
+<h3 id="22-glad-chargement-des-pointeurs-de-fonctions-opengl">2.2 — GLAD : chargement des pointeurs de fonctions OpenGL</h3>
 <div class="highlight"><pre><span></span><code><span class="n">gladLoadGLLoader</span><span class="p">((</span><span class="n">GLADloadproc</span><span class="p">)</span><span class="n">glfwGetProcAddress</span><span class="p">);</span>
 </code></pre></div>
 
 <p>OpenGL n'est <strong>pas une bibliothèque</strong> au sens classique — c'est une <em>spécification</em>. Les adresses réelles des fonctions vivent dans le driver GPU (<a href="#glossary-mesa" title="Implémentation open-source des API graphiques (OpenGL, Vulkan) sous Linux">Mesa</a>, NVIDIA, AMD). <a href="#glossary-glad" title="Générateur de loader OpenGL — résout les adresses des fonctions GL au runtime">GLAD</a> interroge chaque adresse à l'exécution via <code>glXGetProcAddress</code> et remplit une table de pointeurs de fonctions. Après cet appel, <code>glCreateShader</code>, <code>glDispatchCompute</code>, etc. deviennent utilisables.</p>
-<h3>2.3 — Contexte debug OpenGL</h3>
+<h3 id="23-contexte-debug-opengl">2.3 — Contexte debug OpenGL</h3>
 <div class="highlight"><pre><span></span><code><span class="n">setup_opengl_debug</span><span class="p">();</span>
 </code></pre></div>
 
 <p>Cela active <code>GL_DEBUG_OUTPUT_SYNCHRONOUS</code> et enregistre un callback qui intercepte chaque erreur, warning et hint de performance GL. Une table de hachage déduplique les messages (log uniquement à la première occurrence).</p>
-<h3>2.4 — Capture d'entrées et VSync</h3>
+<h3 id="24-capture-dentrees-et-vsync">2.4 — Capture d'entrées et VSync</h3>
 <div class="highlight"><pre><span></span><code><span class="n">glfwSwapInterval</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">                    </span><span class="c1">// VSync OFF — FPS illimité</span>
 <span class="n">glfwSetInputMode</span><span class="p">(</span><span class="n">app</span><span class="o">-&gt;</span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="n">GLFW_CURSOR</span><span class="p">,</span><span class="w"> </span><span class="n">GLFW_CURSOR_DISABLED</span><span class="p">);</span><span class="w">  </span><span class="c1">// Mode FPS</span>
 </code></pre></div>
 
 <p>Le curseur est capturé en <strong>mode relatif</strong> — les mouvements souris produisent des deltas pour le <a href="#glossary-camera-orbitale" title="Contrôle caméra qui tourne autour d'un point d'intérêt via yaw/pitch depuis les mouvements souris">contrôle orbital</a> de la caméra.</p>
 <hr>
-<h2>Chapitre 3 — Initialisation côté CPU</h2>
+<h2 id="chapitre-3-initialisation-cote-cpu">Chapitre 3 — Initialisation côté CPU</h2>
 <p>Avant de toucher au GPU, plusieurs systèmes CPU sont initialisés.</p>
-<h3>3.1 — La caméra orbitale</h3>
+<h3 id="31-la-camera-orbitale">3.1 — La caméra orbitale</h3>
 <div class="highlight"><pre><span></span><code><span class="n">camera_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">app</span><span class="o">-&gt;</span><span class="n">camera</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0F</span><span class="p">,</span><span class="w"> </span><span class="mf">-90.0F</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0F</span><span class="p">);</span>
 </code></pre></div>
 
@@ -376,22 +386,30 @@ sequenceDiagram
 <pre class="mermaid">
 graph LR
     subgraph "Pipeline de mise à jour caméra"
-        A["Delta souris"] -->|"Filtre EMA"| B["yaw_target / pitch_target"]
-        B -->|"Lerp α=0.1"| C["yaw / pitch (lissés)"]
-        C --> D["camera_update_vectors()"]
-        D --> E["vecteurs front, right, up"]
-        E --> F["Matrice de vue (lookAt)"]
+        A("Delta souris") -->|"Filtre EMA"| B("yaw_target / pitch_target")
+        B -->|"Lerp α=0.1"| C("yaw / pitch (lissés)")
+        C --> D("camera_update_vectors()")
+        D --> E("vecteurs front, right, up")
+        E --> F("Matrice de vue (lookAt)")
     end
 
     subgraph "Physique (60Hz fixe)"
-        G["Touches ZQSD"] --> H["Vélocité cible"]
-        H -->|"accélération × dt"| I["Vélocité courante"]
-        I -->|"friction"| J["Position += vel × dt"]
-        J --> K["Head bobbing (sin)"]
+        G("Touches ZQSD") --> H("Vélocité cible")
+        H -->|"accélération × dt"| I("Vélocité courante")
+        I -->|"friction"| J("Position += vel × dt")
+        J --> K("Head bobbing (sin)")
     end
+
+    classDef keyFunc fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef subsystem fill:#ffffff,stroke:#aaaaaa,stroke-width:1.5px,color:#444444
+    classDef loopNode fill:#e3f2fd,stroke:#42a5f5,stroke-width:1.5px,color:#2d2d2d
+
+    class D,F keyFunc
+    class A,B,C,E subsystem
+    class G,H,I,J,K loopNode
 </pre>
 
-<h3>3.2 — Thread de chargement asynchrone</h3>
+<h3 id="32-thread-de-chargement-asynchrone">3.2 — Thread de chargement asynchrone</h3>
 <div class="highlight"><pre><span></span><code><span class="n">app</span><span class="o">-&gt;</span><span class="n">async_loader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">async_loader_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">app</span><span class="o">-&gt;</span><span class="n">tracy_mgr</span><span class="p">);</span>
 </code></pre></div>
 
@@ -408,9 +426,9 @@ stateDiagram-v2
 </pre>
 
 <hr>
-<h2>Chapitre 4 — Initialisation de la scène (le GPU se réveille)</h2>
+<h2 id="chapitre-4-initialisation-de-la-scene-le-gpu-se-reveille">Chapitre 4 — Initialisation de la scène (le GPU se réveille)</h2>
 <p><code>scene_init()</code> (<a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/scene.c">src/scene.c</a>) est l'endroit où le GPU reçoit son premier vrai travail.</p>
-<h3>4.1 — État initial de la scène</h3>
+<h3 id="41-etat-initial-de-la-scene">4.1 — État initial de la scène</h3>
 <div class="highlight"><pre><span></span><code><span class="n">scene</span><span class="o">-&gt;</span><span class="n">subdivisions</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w">                     </span><span class="c1">// Icosphère niveau 3</span>
 <span class="n">scene</span><span class="o">-&gt;</span><span class="n">wireframe</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                     </span><span class="c1">// Remplissage solide</span>
 <span class="n">scene</span><span class="o">-&gt;</span><span class="n">show_envmap</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">                     </span><span class="c1">// Skybox visible</span>
@@ -420,7 +438,7 @@ stateDiagram-v2
 <span class="n">scene</span><span class="o">-&gt;</span><span class="n">specular_aa_enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">                 </span><span class="c1">// AA basé sur la courbure</span>
 </code></pre></div>
 
-<h3>4.2 — Textures factices et BRDF LUT</h3>
+<h3 id="42-textures-factices-et-brdf-lut">4.2 — Textures factices et BRDF LUT</h3>
 <p>Deux textures sentinelles sont créées immédiatement — elles servent de <strong>fallback</strong> tant qu'une texture <a href="#glossary-ibl" title="Image-Based Lighting — éclairage extrait d'une image panoramique HDR de l'environnement">IBL</a> n'est pas prête :</p>
 <div class="highlight"><pre><span></span><code><span class="n">scene</span><span class="o">-&gt;</span><span class="n">dummy_black_tex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">render_utils_create_color_texture</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span><span class="w">  </span><span class="c1">// 1×1 RGBA</span>
 <span class="n">scene</span><span class="o">-&gt;</span><span class="n">dummy_white_tex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">render_utils_create_color_texture</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span><span class="w">  </span><span class="c1">// 1×1 RGBA</span>
@@ -461,9 +479,9 @@ stateDiagram-v2
 </tbody>
 </table>
 <p>Cette texture mappe <code>(NdotV, roughness)</code> → <code>(F0_scale, F0_bias)</code> et est utilisée chaque frame par le <a href="#glossary-fragment-shader" title="Shader qui calcule la couleur de chaque pixel à l'écran">fragment shader</a> <a href="#glossary-pbr" title="Physically-Based Rendering — modèle d'éclairage qui simule la physique réelle de la lumière">PBR</a> pour éviter l'intégration <a href="#glossary-brdf" title="Bidirectional Reflectance Distribution Function — fonction décrivant comment la lumière rebondit sur une surface">BRDF</a> coûteuse en temps réel.</p>
-<h3>4.3 — Deux modes de rendu : Billboard Ray-Tracing vs. Mesh Icosphère</h3>
+<h3 id="43-deux-modes-de-rendu-billboard-ray-tracing-vs-mesh-icosphere">4.3 — Deux modes de rendu : Billboard Ray-Tracing vs. Mesh Icosphère</h3>
 <p>Le moteur supporte deux stratégies de rendu de sphères. Le <strong>mode par défaut</strong> est le <a href="#glossary-billboard" title="Quad (rectangle) toujours face à la caméra, utilisé ici comme surface de ray-tracing">billboard</a> <a href="#glossary-ray-tracing" title="Technique qui trace des rayons lumineux pour calculer l'intersection avec des objets">ray-tracing</a>.</p>
-<h4>Mode par défaut : Billboard + Ray-Tracing par pixel (billboard_mode = 1)</h4>
+<h4 id="mode-par-defaut-billboard-ray-tracing-par-pixel-billboard_mode-1">Mode par défaut : Billboard + Ray-Tracing par pixel (billboard_mode = 1)</h4>
 <p>Chaque sphère est rendue comme un <strong>simple <a href="#glossary-quad" title="Rectangle composé de 2 triangles — la primitive 2D de base">quad</a> aligné à l'écran</strong> (4 vertices, 2 triangles). Le fragment <a href="#glossary-shader" title="Programme exécuté directement sur le GPU (vertex, fragment, compute)">shader</a> effectue une <strong>intersection rayon-sphère analytique</strong> par pixel, produisant des sphères mathématiquement parfaites.</p>
 <p><img alt="Géométrie AABB du billboard — le quad projeté enveloppe la sphère à l'écran" src="https://yoyonel.github.io/images/suckless-ogl/billboard_aabb_geometry.png">
 <em><center>Le <a href="#glossary-vertex-shader" title="Shader qui traite chaque sommet de la géométrie (position, projection)">vertex shader</a> projette un quad serré autour de la <a href="#glossary-aabb" title="Axis-Aligned Bounding Box — boîte englobante alignée aux axes, pour le culling rapide">bounding box</a> à l'écran de la sphère via calcul de tangentes analytiques.</center></em></p>
@@ -478,32 +496,41 @@ stateDiagram-v2
 <pre class="mermaid">
 graph LR
     subgraph "Billboard Ray-Tracing (Défaut)"
-        A["Quad 4-vertex<br/>(par instance)"] -->|"Vertex Shader :<br/>projection sur bounds sphère"| B["Quad écran"]
-        B -->|"Fragment Shader :<br/>intersection rayon-sphère"| C["Sphère parfaite<br/>normale + profondeur par pixel"]
+        A("Quad 4-vertex<br/>(par instance)") -->|"Vertex Shader :<br/>projection sur bounds sphère"| B("Quad écran")
+        B -->|"Fragment Shader :<br/>intersection rayon-sphère"| C("Sphère parfaite<br/>normale + profondeur par pixel")
     end
 
     subgraph "Mesh Icosphère (Fallback)"
-        D["Mesh 642-vertex<br/>(icosaèdre subdivisé)"] -->|"Rastérisé en<br/>triangles"| E["Approximation polygonale<br/>(facettée à basse subdiv)"]
+        D("Mesh 642-vertex<br/>(icosaèdre subdivisé)") -->|"Rastérisé en<br/>triangles"| E("Approximation polygonale<br/>(facettée à basse subdiv)")
     end
 
-    style A fill:#4CAF50,stroke:#333,stroke-width:2px
-    style D fill:#999,stroke:#333,stroke-width:1px
+    classDef highlight fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef fallback fill:#f5f5f5,stroke:#bdbdbd,stroke-width:1.5px,color:#666666
+
+    class A,B,C highlight
+    class D,E fallback
 </pre>
 
 <blockquote>
 <p><strong>💡 Pourquoi le <a href="#glossary-billboard" title="Quad (rectangle) toujours face à la caméra, utilisé ici comme surface de ray-tracing">billboard</a> ray-tracing ?</strong> Avec 100 sphères, l'approche billboard utilise <strong>100 × 4 = 400 vertices</strong> au total, versus <strong>100 × 642 = 64 200 vertices</strong> pour des <a href="#glossary-icosphre" title="Sphère construite en subdivisant un icosaèdre (20 faces) — plus uniforme qu'une UV sphere">icosphères</a> niveau 3. Plus important encore, les sphères sont <strong>mathématiquement parfaites</strong> à tout niveau de zoom — aucun artefact de <a href="#glossary-tessellation" title="Subdivision de la géométrie en triangles plus fins pour plus de détail">tessellation</a>.</p>
 </blockquote>
-<h4>Fallback : Mesh icosphère instancié (billboard_mode = 0)</h4>
+<h4 id="fallback-mesh-icosphere-instancie-billboard_mode-0">Fallback : Mesh icosphère instancié (billboard_mode = 0)</h4>
 <p>Le chemin <a href="#glossary-icosphre" title="Sphère construite en subdivisant un icosaèdre (20 faces) — plus uniforme qu'une UV sphere">icosphère</a> génère un <a href="#glossary-icosphre" title="Sphère construite en subdivisant un icosaèdre (20 faces) — plus uniforme qu'une UV sphere">icosaèdre</a> subdivisé récursivement :</p>
 <pre class="mermaid">
 graph LR
-    A["Niveau 0<br/>12 vertices<br/>20 triangles"] -->|"Subdiviser"| B["Niveau 1<br/>42 vertices<br/>80 triangles"]
-    B -->|"Subdiviser"| C["Niveau 2<br/>162 vertices<br/>320 triangles"]
-    C -->|"Subdiviser"| D["Niveau 3<br/>642 vertices<br/>1 280 triangles"]
-    D -->|"..."| E["Niveau 6<br/>~40k vertices"]
+    A("Niveau 0<br/>12 vertices<br/>20 triangles") -->|"Subdiviser"| B("Niveau 1<br/>42 vertices<br/>80 triangles")
+    B -->|"Subdiviser"| C("Niveau 2<br/>162 vertices<br/>320 triangles")
+    C -->|"Subdiviser"| D("Niveau 3<br/>642 vertices<br/>1 280 triangles")
+    D -->|"..."| E("Niveau 6<br/>~40k vertices")
+
+    classDef keyFunc fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef subsystem fill:#ffffff,stroke:#aaaaaa,stroke-width:1.5px,color:#444444
+
+    class D keyFunc
+    class A,B,C,E subsystem
 </pre>
 
-<h3>4.4 — Bibliothèque de matériaux</h3>
+<h3 id="44-bibliotheque-de-materiaux">4.4 — Bibliothèque de matériaux</h3>
 <div class="highlight"><pre><span></span><code><span class="n">scene</span><span class="o">-&gt;</span><span class="n">material_lib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">material_load_presets</span><span class="p">(</span><span class="s">&quot;assets/materials/pbr_materials.json&quot;</span><span class="p">);</span>
 </code></pre></div>
 
@@ -569,7 +596,7 @@ graph LR
 </tbody>
 </table>
 <p>Chaque matériau fournit : <a href="#glossary-albedo" title="Couleur de base d'un matériau (sans éclairage)"><code>albedo</code></a> (RGB), <a href="#glossary-metallic" title="Paramètre PBR : 0 = diélectrique (plastique, bois), 1 = métal (or, chrome)"><code>metallic</code></a> (0–1), <a href="#glossary-roughness" title="Paramètre PBR : 0 = miroir parfait, 1 = complètement mat"><code>roughness</code></a> (0–1).</p>
-<h3>4.5 — La grille d'instances</h3>
+<h3 id="45-la-grille-dinstances">4.5 — La grille d'instances</h3>
 <div class="highlight"><pre><span></span><code><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">cols</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">       </span><span class="c1">// DEFAULT_COLS</span>
 <span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">spacing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.5F</span><span class="p">;</span><span class="w">   </span><span class="c1">// DEFAULT_SPACING</span>
 </code></pre></div>
@@ -591,7 +618,7 @@ graph LR
 <span class="p">}</span><span class="w"> </span><span class="n">SphereInstance</span><span class="p">;</span><span class="w">     </span><span class="c1">// Total : 88 octets par instance</span>
 </code></pre></div>
 
-<h3>4.6 — Layout du VAO (mode billboard)</h3>
+<h3 id="46-layout-du-vao-mode-billboard">4.6 — Layout du VAO (mode billboard)</h3>
 <p>En mode billboard, le <a href="#glossary-vao" title="Vertex Array Object — décrit le format des données géométriques envoyées au GPU">VAO</a> lie un <strong>quad de 4 vertices</strong> et les données matériaux par instance :</p>
 <div class="highlight"><pre><span></span><code>┌────────────────────────────────────────────────────────────────┐
 │              Billboard VAO (Mode de rendu par défaut)          │
@@ -610,7 +637,7 @@ Location 2–7 : glVertexAttribDivisor = 1 (avance par instance)
 </code></pre></div>
 
 <p><strong>Appel de <a href="#glossary-draw-call" title="Un appel CPU→GPU qui demande le rendu d'un jeu de géométrie">draw</a></strong> : <code>glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 100)</code> — 100 quads, <a href="#glossary-face-culling" title="Optimisation GPU qui élimine les triangles dont la face arrière est visible — désactivé ici pour les billboards">face culling</a> désactivé.</p>
-<h3>4.7 — Compilation des shaders</h3>
+<h3 id="47-compilation-des-shaders">4.7 — Compilation des shaders</h3>
 <p>Tous les shaders sont compilés pendant <code>scene_init()</code>. Le loader (<a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/shader.c">src/shader.c</a>) supporte un système d'inclusion <strong><code>@header</code></strong> personnalisé :</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Dans pbr_ibl_instanced.frag :</span>
 <span class="err">@</span><span class="n">header</span><span class="w"> </span><span class="err">&quot;</span><span class="n">pbr_functions</span><span class="p">.</span><span class="n">glsl</span><span class="err">&quot;</span>
@@ -620,39 +647,49 @@ Location 2–7 : glVertexAttribDivisor = 1 (avance par instance)
 <p>Ce système inline récursivement les fichiers (profondeur max : 16), avec déduplication type <a href="#glossary-include-guard" title="Mécanisme de déduplication qui empêche un fichier d'être inclus plusieurs fois">include-guard</a>.</p>
 <pre class="mermaid">
 graph TD
-    INIT["scene_init() — Compilation des shaders"] --> REND
+    INIT("scene_init() — Compilation des shaders") --> REND
     INIT --> COMP
     INIT --> POST
 
     subgraph REND ["🎨 Programmes de rendu"]
         direction TB
-        PBR["PBR Instancié — pbr_ibl_instanced.vert/.frag"]
-        BB["PBR Billboard — pbr_ibl_billboard.vert/.frag"]
-        SKY["Skybox — background.vert/.frag"]
-        UI["UI Overlay — ui.vert/.frag"]
+        PBR("PBR Instancié — pbr_ibl_instanced.vert/.frag")
+        BB("PBR Billboard — pbr_ibl_billboard.vert/.frag")
+        SKY("Skybox — background.vert/.frag")
+        UI("UI Overlay — ui.vert/.frag")
     end
 
     subgraph COMP ["⚡ Compute Shaders"]
         direction TB
-        SPMAP["Prefiltre Spéculaire — IBL/spmap.glsl"]
-        IRMAP["Conv. Irradiance — IBL/irmap.glsl"]
-        BRDF["BRDF LUT — IBL/spbrdf.glsl"]
-        LUM["Réduction Luminance — IBL/luminance_reduce"]
+        SPMAP("Prefiltre Spéculaire — IBL/spmap.glsl")
+        IRMAP("Conv. Irradiance — IBL/irmap.glsl")
+        BRDF("BRDF LUT — IBL/spbrdf.glsl")
+        LUM("Réduction Luminance — IBL/luminance_reduce")
     end
 
     subgraph POST ["✨ Post-Process"]
         direction TB
-        PP["Composite Final — postprocess.vert/.frag"]
-        BL["Bloom — down/up/prefilter"]
+        PP("Composite Final — postprocess.vert/.frag")
+        BL("Bloom — down/up/prefilter")
     end
+
+    classDef keyFunc fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef render fill:#e3f2fd,stroke:#42a5f5,stroke-width:1.5px,color:#2d2d2d
+    classDef compute fill:#f3e5f5,stroke:#ab47bc,stroke-width:1.5px,color:#2d2d2d
+    classDef postfx fill:#fce4ec,stroke:#c2185b,stroke-width:1.5px,color:#2d2d2d
+
+    class INIT keyFunc
+    class PBR,BB,SKY,UI render
+    class SPMAP,IRMAP,BRDF,LUM compute
+    class PP,BL postfx
 </pre>
 
 <hr>
-<h2>Chapitre 5 — Setup du pipeline de post-processing</h2>
+<h2 id="chapitre-5-setup-du-pipeline-de-post-processing">Chapitre 5 — Setup du pipeline de post-processing</h2>
 <div class="highlight"><pre><span></span><code><span class="n">postprocess_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">app</span><span class="o">-&gt;</span><span class="n">postprocess</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">app</span><span class="o">-&gt;</span><span class="n">gpu_profiler</span><span class="p">,</span><span class="w"> </span><span class="mi">1920</span><span class="p">,</span><span class="w"> </span><span class="mi">1080</span><span class="p">);</span>
 </code></pre></div>
 
-<h3>5.1 — Le FBO de scène (Multi-Render Target)</h3>
+<h3 id="51-le-fbo-de-scene-multi-render-target">5.1 — Le FBO de scène (Multi-Render Target)</h3>
 <p>Le <a href="#glossary-fbo" title="Framebuffer Object — surface de rendu offscreen (on dessine dedans au lieu de l'écran)">framebuffer offscreen</a> principal utilise le <strong><a href="#glossary-mrt" title="Multiple Render Targets — écrire dans plusieurs textures en une seule passe de rendu">MRT</a></strong> (Multiple Render Targets) :</p>
 <table>
 <thead>
@@ -692,18 +729,30 @@ graph TD
 </table>
 <pre class="mermaid">
 graph TD
-    FBO["FBO de Scène — Multi-Render Target"] --> C0
+    FBO("FBO de Scène — Multi-Render Target") --> C0
     FBO --> C1
     FBO --> DS
     DS --> SV
 
-    C0["🟦 Color 0 — GL_RGBA16F<br/>Couleur HDR scène"]
-    C1["🟩 Color 1 — GL_RG16F<br/>Vecteurs vélocité"]
-    DS["🟫 Depth/Stencil — GL_DEPTH32F_STENCIL8"]
-    SV["🟪 Vue Stencil — GL_R8UI (TextureView)"]
+    C0("🟦 Color 0 — GL_RGBA16F<br/>Couleur HDR scène")
+    C1("🟩 Color 1 — GL_RG16F<br/>Vecteurs vélocité")
+    DS("🟫 Depth/Stencil — GL_DEPTH32F_STENCIL8")
+    SV("🟪 Vue Stencil — GL_R8UI (TextureView)")
+
+    classDef keyFunc fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef color0 fill:#e3f2fd,stroke:#42a5f5,stroke-width:1.5px,color:#2d2d2d
+    classDef color1 fill:#e8f5e9,stroke:#66bb6a,stroke-width:1.5px,color:#2d2d2d
+    classDef depth fill:#fff3e0,stroke:#ff9800,stroke-width:1.5px,color:#2d2d2d
+    classDef stencil fill:#f3e5f5,stroke:#ab47bc,stroke-width:1.5px,color:#2d2d2d
+
+    class FBO keyFunc
+    class C0 color0
+    class C1 color1
+    class DS depth
+    class SV stencil
 </pre>
 
-<h3>5.2 — Ressources des sous-effets</h3>
+<h3 id="52-ressources-des-sous-effets">5.2 — Ressources des sous-effets</h3>
 <p>Chaque effet de post-processing initialise ses propres ressources :</p>
 <table>
 <thead>
@@ -735,18 +784,18 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>5.3 — Effets actifs par défaut</h3>
+<h3 id="53-effets-actifs-par-defaut">5.3 — Effets actifs par défaut</h3>
 <div class="highlight"><pre><span></span><code><span class="n">postprocess_enable</span><span class="p">(</span><span class="o">&amp;</span><span class="n">app</span><span class="o">-&gt;</span><span class="n">postprocess</span><span class="p">,</span><span class="w"> </span><span class="n">POSTFX_FXAA</span><span class="p">);</span><span class="w">  </span><span class="c1">// Seulement FXAA</span>
 </code></pre></div>
 
 <p>Au démarrage, seul <strong><a href="#glossary-fxaa" title="Fast Approximate Anti-Aliasing — anti-crénelage rapide en post-process sur l'image finale">FXAA</a></strong> est actif. Les autres effets sont activés/désactivés en temps réel via raccourcis clavier.</p>
 <hr>
-<h2>Chapitre 6 — Le premier chargement HDR</h2>
+<h2 id="chapitre-6-le-premier-chargement-hdr">Chapitre 6 — Le premier chargement HDR</h2>
 <div class="highlight"><pre><span></span><code><span class="n">env_manager_load</span><span class="p">(</span><span class="o">&amp;</span><span class="n">app</span><span class="o">-&gt;</span><span class="n">env_mgr</span><span class="p">,</span><span class="w"> </span><span class="n">app</span><span class="o">-&gt;</span><span class="n">async_loader</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;env.hdr&quot;</span><span class="p">);</span>
 </code></pre></div>
 
 <p>Cela déclenche le <strong>pipeline de <a href="#glossary-chargement-asynchrone" title="Exécuter les I/O disque sur un thread séparé pour ne pas bloquer le rendu">chargement asynchrone</a> d'environnement</strong> — l'opération multi-frame la plus complexe du moteur.</p>
-<h3>6.1 — Séquence de chargement async</h3>
+<h3 id="61-sequence-de-chargement-async">6.1 — Séquence de chargement async</h3>
 <pre class="mermaid">
 sequenceDiagram
     participant Main as Thread Principal (Rendu)
@@ -774,7 +823,7 @@ sequenceDiagram
     Main->>GPU: glGenerateMipmap()
 </pre>
 
-<h3>6.2 — Machine à états de transition</h3>
+<h3 id="62-machine-a-etats-de-transition">6.2 — Machine à états de transition</h3>
 <p>Pendant le premier chargement, l'écran reste <strong>noir</strong> (pas de crossfade depuis une scène précédente) :</p>
 <pre class="mermaid">
 stateDiagram-v2
@@ -787,22 +836,30 @@ stateDiagram-v2
 <p><strong><code>WAIT_IBL</code></strong> : <code>transition_alpha = 1.0</code> (noir opaque complet) — l'écran est noir pendant les premières frames.</p>
 <p><strong><code>FADE_IN</code></strong> : l'alpha diminue de 1.0 → 0.0 sur 250ms.</p>
 <hr>
-<h2>Chapitre 7 — Génération <a href="#glossary-ibl" title="Image-Based Lighting — éclairage extrait d'une image panoramique HDR de l'environnement">IBL</a> (progressive, multi-frame)</h2>
+<h2 id="chapitre-7-generation-ibl-progressive-multi-frame">Chapitre 7 — Génération <a href="#glossary-ibl" title="Image-Based Lighting — éclairage extrait d'une image panoramique HDR de l'environnement">IBL</a> (progressive, multi-frame)</h2>
 <p>Une fois la texture <a href="#glossary-hdr" title="High Dynamic Range — valeurs de couleur supérieures à 1.0 (lumière réaliste)">HDR</a> uploadée, le <strong>coordinateur <a href="#glossary-ibl" title="Image-Based Lighting — éclairage extrait d'une image panoramique HDR de l'environnement">IBL</a></strong> (<a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/ibl_coordinator.c">src/ibl_coordinator.c</a>) prend le relais. Il calcule trois maps sur plusieurs frames pour éviter les <a href="#glossary-gpu-stall" title="Blocage du pipeline GPU quand il attend une ressource ou une synchronisation — provoque des chutes de framerate">stalls GPU</a>.</p>
-<h3>7.1 — Les trois maps <a href="#glossary-ibl" title="Image-Based Lighting — éclairage extrait d'une image panoramique HDR de l'environnement">IBL</a></h3>
+<h3 id="71-les-trois-maps-ibl">7.1 — Les trois maps <a href="#glossary-ibl" title="Image-Based Lighting — éclairage extrait d'une image panoramique HDR de l'environnement">IBL</a></h3>
 <pre class="mermaid">
 graph TB
-    HDR["Map d'environnement HDR<br/>2048×1024 equirectangulaire<br/>GL_RGBA16F"] --> SPEC
+    HDR("Map d'environnement HDR<br/>2048×1024 equirectangulaire<br/>GL_RGBA16F") --> SPEC
     HDR --> IRR
     HDR --> LUM
 
-    SPEC["Map Prefiltre Spéculaire<br/>1024×1024 × 5 niveaux mip<br/>Compute: spmap.glsl"]
-    IRR["Map d'Irradiance<br/>64×64<br/>Compute: irmap.glsl"]
-    LUM["Réduction Luminance<br/>1×1 moyenne<br/>Compute: luminance_reduce"]
+    SPEC("Map Prefiltre Spéculaire<br/>1024×1024 × 5 niveaux mip<br/>Compute: spmap.glsl")
+    IRR("Map d'Irradiance<br/>64×64<br/>Compute: irmap.glsl")
+    LUM("Réduction Luminance<br/>1×1 moyenne<br/>Compute: luminance_reduce")
 
-    SPEC -->|"Réflexion par pixel<br/>roughness → niveau mip"| PBR["Shader PBR"]
+    SPEC -->|"Réflexion par pixel<br/>roughness → niveau mip"| PBR("Shader PBR")
     IRR -->|"Intégrale diffuse<br/>hémisphérique"| PBR
-    LUM -->|"Seuil auto-exposure"| PP["Post-Process"]
+    LUM -->|"Seuil auto-exposure"| PP("Post-Process")
+
+    classDef keyFunc fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef compute fill:#f3e5f5,stroke:#ab47bc,stroke-width:1.5px,color:#2d2d2d
+    classDef target fill:#e3f2fd,stroke:#42a5f5,stroke-width:1.5px,color:#2d2d2d
+
+    class HDR keyFunc
+    class SPEC,IRR,LUM compute
+    class PBR,PP target
 </pre>
 
 <table>
@@ -839,7 +896,7 @@ graph TB
 </tr>
 </tbody>
 </table>
-<h3>7.2 — Stratégie de découpage progressif</h3>
+<h3 id="72-strategie-de-decoupage-progressif">7.2 — Stratégie de découpage progressif</h3>
 <p>Pour éviter les pics de <a href="#glossary-frame-time" title="Durée totale de rendu d'une image — 16.6ms à 60 FPS, tout dépassement provoque un saccade">frame time</a>, chaque niveau <a href="#glossary-mipmap" title="Versions pré-réduites d'une texture (½, ¼, ⅛…) pour un filtrage plus propre au loin">mip</a> est subdivisé en <strong>slices</strong> traitées sur des frames consécutives :</p>
 <table>
 <thead>
@@ -880,34 +937,34 @@ graph TB
 <pre class="mermaid">
 gantt
     title Timeline de génération IBL progressive
-    dateFormat X
+    dateFormat x
     axisFormat Frame %s
 
     section Luminance
-    Luminance Pass 1      :lum1, 0, 1
-    Luminance Wait (fence) :lum2, 1, 2
-    Luminance Readback     :lum3, 2, 3
+    Luminance Pass 1       :lum1, 0, 1000
+    Luminance Wait (fence) :lum2, 1000, 2000
+    Luminance Readback     :lum3, 2000, 3000
 
     section Specular Mip 0
-    Slice 1/24            :s1, 3, 4
-    Slice 2/24            :s2, 4, 5
-    Slice ...             :s3, 5, 6
-    Slice 24/24           :s4, 6, 7
+    Slice 1/24             :s1, 3000, 4000
+    Slice 2/24             :s2, 4000, 5000
+    Slice ...              :s3, 5000, 6000
+    Slice 24/24            :s4, 6000, 7000
 
     section Specular Mip 1
-    Slices 1-8            :m1, 7, 9
+    Slices 1-8             :m1, 7000, 9000
 
     section Specular Mips 2-4
-    Dispatch groupé       :m3, 9, 10
+    Dispatch groupé        :m3, 9000, 10000
 
     section Irradiance
-    Slices 1-12           :i1, 10, 12
+    Slices 1-12            :i1, 10000, 12000
 
     section Terminé
-    IBL Complet → Fade In :done, 12, 13
+    IBL Complet → Fade In  :ibl_done, 12000, 13000
 </pre>
 
-<h3>7.3 — Machine à états IBL</h3>
+<h3 id="73-machine-a-etats-ibl">7.3 — Machine à états IBL</h3>
 <div class="highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="n">IBLState</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">IBL_STATE_IDLE</span><span class="p">,</span><span class="w">             </span><span class="c1">// Pas de travail</span>
 <span class="w">    </span><span class="n">IBL_STATE_LUMINANCE</span><span class="p">,</span><span class="w">        </span><span class="c1">// Pass 1 : réduction luminance</span>
@@ -920,24 +977,32 @@ gantt
 </code></pre></div>
 
 <hr>
-<h2>Chapitre 8 — La boucle principale</h2>
+<h2 id="chapitre-8-la-boucle-principale">Chapitre 8 — La boucle principale</h2>
 <p><code>app_run()</code> (<a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/app.c">src/app.c</a>) est le battement de cœur — une <strong><a href="#glossary-game-loop" title="Boucle principale d'un jeu : lire les entrées → mettre à jour → dessiner → recommencer">boucle de jeu</a> non capée</strong> classique avec <a href="#glossary-pas-fixe-fixed-timestep" title="Mise à jour de la physique à intervalle constant (ex: 60 Hz) indépendamment du framerate">physique à pas fixe</a>.</p>
 <pre class="mermaid">
 graph TD
-    A["① glfwPollEvents() — Clavier, souris, resize"]
-    A --> B["② Temps & FPS — delta_time, frame_count"]
-    B --> C["③ Physique Caméra — Pas fixe 60Hz, lerp rotation"]
-    C --> D["④ Mise à jour géométrie — si subdiv changé"]
-    D --> E["⑤ app_update() — Traitement état entrées"]
-    E --> F["⑥ renderer_draw_frame() — LE GROS MORCEAU"]
-    F --> G["⑦ Tracy screenshots — profiling"]
-    G --> H["⑧ glfwSwapBuffers() — Présentation à l'écran"]
+    A("① glfwPollEvents() — Clavier, souris, resize")
+    A --> B("② Temps & FPS — delta_time, frame_count")
+    B --> C("③ Physique Caméra — Pas fixe 60Hz, lerp rotation")
+    C --> D("④ Mise à jour géométrie — si subdiv changé")
+    D --> E("⑤ app_update() — Traitement état entrées")
+    E --> F("⑥ renderer_draw_frame() — LE GROS MORCEAU")
+    F --> G("⑦ Tracy screenshots — profiling")
+    G --> H("⑧ glfwSwapBuffers() — Présentation à l'écran")
     H -->|"frame suivante"| A
+
+    classDef keyFunc fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef loopNode fill:#e3f2fd,stroke:#42a5f5,stroke-width:1.5px,color:#2d2d2d
+    classDef subsystem fill:#ffffff,stroke:#aaaaaa,stroke-width:1.5px,color:#444444
+
+    class F keyFunc
+    class A,B,C,D,E,G loopNode
+    class H subsystem
 </pre>
 
-<h3>8.1 — Resize différé</h3>
+<h3 id="81-resize-differe">8.1 — Resize différé</h3>
 <p>Les événements de redimensionnement sont <strong>différés</strong> — le callback <a href="#glossary-glfw" title="Bibliothèque C pour créer des fenêtres et gérer les entrées clavier/souris">GLFW</a> enregistre seulement les nouvelles dimensions. La recréation réelle des FBOs se fait au début de la frame suivante, hors du contexte limité du callback.</p>
-<h3>8.2 — Intégration caméra à pas fixe</h3>
+<h3 id="82-integration-camera-a-pas-fixe">8.2 — Intégration caméra à pas fixe</h3>
 <div class="highlight"><pre><span></span><code><span class="n">app</span><span class="o">-&gt;</span><span class="n">camera</span><span class="p">.</span><span class="n">physics_accumulator</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="n">app</span><span class="o">-&gt;</span><span class="n">delta_time</span><span class="p">;</span>
 <span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">app</span><span class="o">-&gt;</span><span class="n">camera</span><span class="p">.</span><span class="n">physics_accumulator</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">app</span><span class="o">-&gt;</span><span class="n">camera</span><span class="p">.</span><span class="n">fixed_timestep</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">camera_fixed_update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">app</span><span class="o">-&gt;</span><span class="n">camera</span><span class="p">);</span><span class="w">  </span><span class="c1">// Vélocité, friction, bobbing</span>
@@ -953,23 +1018,32 @@ graph TD
 
 <p>Cela garantit une physique déterministe indépendamment du framerate, tandis que la rotation reste fluide via interpolation par frame.</p>
 <hr>
-<h2>Chapitre 9 — Le rendu d'une frame</h2>
+<h2 id="chapitre-9-le-rendu-dune-frame">Chapitre 9 — Le rendu d'une frame</h2>
 <p><code>renderer_draw_frame()</code> (<a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/renderer.c">src/renderer.c</a>) orchestre le pipeline de rendu complet.</p>
-<h3>9.1 — Architecture haut niveau</h3>
+<h3 id="91-architecture-haut-niveau">9.1 — Architecture haut niveau</h3>
 <pre class="mermaid">
 graph TD
-    A["GPU Profiler Begin"] --> B["postprocess_begin() — Bind Scene FBO, Clear"]
-    B --> C["camera_get_view_matrix()"]
-    C --> D["glm_perspective() — FOV=60°, near=0.1, far=1000"]
-    D --> E["ViewProj = Proj × View"]
-    E --> G1["🌅 Pass 1 : Skybox — depth désactivée"]
-    G1 --> G2["🔢 Pass 2 : Tri des sphères — GPU Bitonic"]
-    G2 --> G3["🔮 Pass 3 : Sphères PBR — draw instancié billboard"]
-    G3 --> H["✨ postprocess_end() — Pipeline 7 étapes"]
-    H --> I["🖥️ UI Overlay + Transition Env"]
+    A("GPU Profiler Begin") --> B("postprocess_begin() — Bind Scene FBO, Clear")
+    B --> C("camera_get_view_matrix()")
+    C --> D("glm_perspective() — FOV=60°, near=0.1, far=1000")
+    D --> E("ViewProj = Proj × View")
+    E --> G1("🌅 Pass 1 : Skybox — depth désactivée")
+    G1 --> G2("🔢 Pass 2 : Tri des sphères — GPU Bitonic")
+    G2 --> G3("🔮 Pass 3 : Sphères PBR — draw instancié billboard")
+    G3 --> H("✨ postprocess_end() — Pipeline 7 étapes")
+    H --> I("🖥️ UI Overlay + Transition Env")
+
+    classDef keyFunc fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef loopNode fill:#e3f2fd,stroke:#42a5f5,stroke-width:1.5px,color:#2d2d2d
+    classDef setup fill:#ffffff,stroke:#aaaaaa,stroke-width:1.5px,color:#444444
+    classDef postfx fill:#fce4ec,stroke:#c2185b,stroke-width:1.5px,color:#2d2d2d
+
+    class G1,G2,G3 keyFunc
+    class A,B,C,D,E setup
+    class H,I postfx
 </pre>
 
-<h3>9.2 — Pass 1 : Skybox</h3>
+<h3 id="92-pass-1-skybox">9.2 — Pass 1 : Skybox</h3>
 <p>La <a href="#glossary-skybox" title="Image panoramique affichée en fond de scène comme ciel/environnement">skybox</a> est dessinée <strong>en premier</strong>, avec le test de profondeur <strong>désactivé</strong>. Elle utilise une astuce de <a href="#glossary-quad" title="Rectangle composé de 2 triangles — la primitive 2D de base">quad</a> plein écran :</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// background.vert — reconstruction du rayon en espace monde</span>
 <span class="nb">gl_Position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">vec4</span><span class="p">(</span><span class="n">in_position</span><span class="p">.</span><span class="n">xy</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span><span class="w">  </span><span class="c1">// Depth = 1.0 (plan lointain)</span>
@@ -985,7 +1059,7 @@ graph TD
 <span class="n">VelocityOut</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">vec2</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span><span class="w">          </span><span class="c1">// Pas de mouvement pour la skybox</span>
 </code></pre></div>
 
-<h3>9.3 — Pass 2 : Tri des sphères (Bitonic Sort GPU)</h3>
+<h3 id="93-pass-2-tri-des-spheres-bitonic-sort-gpu">9.3 — Pass 2 : Tri des sphères (Bitonic Sort GPU)</h3>
 <p>Pour le rendu transparent par <a href="#glossary-billboard" title="Quad (rectangle) toujours face à la caméra, utilisé ici comme surface de ray-tracing">billboard</a>, les sphères doivent être dessinées <strong>back-to-front</strong> :</p>
 <table>
 <thead>
@@ -1006,18 +1080,18 @@ graph TD
 <tr>
 <td><code>CPU_RADIX</code></td>
 <td>CPU</td>
-<td>Tri radix</td>
+<td><a href="#glossary-radix-sort" title="Tri par chiffres successifs — O(n·k), efficace sur CPU pour des clés entières">Tri radix</a></td>
 <td>O(n·k)</td>
 </tr>
 <tr>
 <td><code>GPU_BITONIC</code> ★</td>
 <td>GPU</td>
-<td>Tri bitonique (compute)</td>
+<td><a href="#glossary-bitonic-sort" title="Tri parallèle adapté au GPU — compare et échange par paires">Tri bitonique</a> (compute)</td>
 <td>O(n·log²n)</td>
 </tr>
 </tbody>
 </table>
-<h3>9.4 — Pass 3 : Sphères PBR — Billboard Ray-Tracing</h3>
+<h3 id="94-pass-3-spheres-pbr-billboard-ray-tracing">9.4 — Pass 3 : Sphères PBR — Billboard Ray-Tracing</h3>
 <p>C'est le cœur du rendu. <strong>Un seul appel de draw rend les 100 sphères</strong> :</p>
 <table>
 <thead>
@@ -1053,7 +1127,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>9.5 — Le fragment shader billboard (intersection rayon-sphère)</h3>
+<h3 id="95-le-fragment-shader-billboard-intersection-rayon-sphere">9.5 — Le fragment shader billboard (intersection rayon-sphère)</h3>
 <p>Le <a href="#glossary-fragment-shader" title="Shader qui calcule la couleur de chaque pixel à l'écran">fragment shader</a> (<code>pbr_ibl_billboard.frag</code>) est là où la magie opère. Au lieu de <a href="#glossary-shader" title="Programme exécuté directement sur le GPU (vertex, fragment, compute)">shader</a> un <a href="#glossary-mesh" title="Ensemble de triangles formant un objet 3D">mesh</a> rastérisé, il <strong>intersecte analytiquement un rayon avec une sphère parfaite</strong> :</p>
 <p><img alt="Intersection rayon-sphère — le principe géométrique" src="https://yoyonel.github.io/images/suckless-ogl/sphere_intersection.jpg">
 <em><center>Intersection rayon-sphère analytique : le <a href="#glossary-discriminant" title="Valeur mathématique (b²−c) déterminant si un rayon touche une sphère">discriminant</a> détermine si le pixel touche la sphère.</center></em></p>
@@ -1070,25 +1144,35 @@ graph TD
 
 <pre class="mermaid">
 graph TD
-    R["🔦 Construction rayon — origin=camPos, dir=normalize(WorldPos-camPos)"]
-    R --> INT["📐 Intersection Rayon-Sphère — discriminant = b² - c"]
+    R("🔦 Construction rayon — origin=camPos, dir=normalize(WorldPos-camPos)")
+    R --> INT("📐 Intersection Rayon-Sphère — discriminant = b² - c")
     INT --> HIT{"Touché ?"}
-    HIT -->|"Non — disc < 0"| DISCARD["❌ discard — pixel hors sphère"]
-    HIT -->|"Oui"| HITPOS["✅ hitPos = origin + t × dir"]
-    HITPOS --> NORMAL["N = normalize(hitPos - center) — normale parfaite"]
-    HITPOS --> DEPTH["gl_FragDepth = project(hitPos) — Z-buffer correct"]
-    NORMAL --> PBR["V = -rayDir"]
-    PBR --> FRESNEL["Fresnel-Schlick"]
-    PBR --> GGX["Smith-GGX Geometry"]
-    PBR --> NDF["GGX NDF Distribution"]
-    FRESNEL & GGX & NDF --> SPEC["IBL Spéculaire — prefilterMap × brdfLUT"]
-    PBR --> DIFF["IBL Diffuse — irradiance(N) × albedo"]
-    SPEC & DIFF --> FINAL["couleur = Diffuse + Spéculaire"]
-    FINAL --> AA["Anti-Aliasing bords — smoothstep sur discriminant"]
-    AA --> ALPHA["FragColor = vec4(color, edgeFactor) — alpha prémultiplié"]
+    HIT -->|"Non — disc < 0"| DISCARD("❌ discard — pixel hors sphère")
+    HIT -->|"Oui"| HITPOS("✅ hitPos = origin + t × dir")
+    HITPOS --> NORMAL("N = normalize(hitPos - center) — normale parfaite")
+    HITPOS --> DEPTH("gl_FragDepth = project(hitPos) — Z-buffer correct")
+    NORMAL --> PBR("V = -rayDir")
+    PBR --> FRESNEL("Fresnel-Schlick")
+    PBR --> GGX("Smith-GGX Geometry")
+    PBR --> NDF("GGX NDF Distribution")
+    FRESNEL & GGX & NDF --> SPEC("IBL Spéculaire — prefilterMap × brdfLUT")
+    PBR --> DIFF("IBL Diffuse — irradiance(N) × albedo")
+    SPEC & DIFF --> FINAL("couleur = Diffuse + Spéculaire")
+    FINAL --> AA("Anti-Aliasing bords — smoothstep sur discriminant")
+    AA --> ALPHA("FragColor = vec4(color, edgeFactor) — alpha prémultiplié")
+
+    classDef keyFunc fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef compute fill:#e3f2fd,stroke:#42a5f5,stroke-width:1.5px,color:#2d2d2d
+    classDef entryExit fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#2d2d2d
+    classDef subsystem fill:#ffffff,stroke:#aaaaaa,stroke-width:1.5px,color:#444444
+
+    class R,INT,HIT keyFunc
+    class HITPOS,NORMAL,DEPTH,PBR compute
+    class FRESNEL,GGX,NDF,SPEC,DIFF subsystem
+    class FINAL,AA,ALPHA,DISCARD entryExit
 </pre>
 
-<h4>Anti-aliasing analytique des bords</h4>
+<h4 id="anti-aliasing-analytique-des-bords">Anti-aliasing analytique des bords</h4>
 <p><img alt="Anti-aliasing analytique des sphères — smoothstep sur le discriminant" src="https://yoyonel.github.io/images/suckless-ogl/sphere_analytic_aa.jpg">
 <em><center>L'anti-aliasing analytique utilise le discriminant comme métrique de distance au bord — pas besoin de <a href="#glossary-msaa" title="Multisample Anti-Aliasing — anti-crénelage géométrique (coûteux, évité ici)">MSAA</a> pour des bords lisses.</center></em></p>
 <div class="highlight"><pre><span></span><code><span class="kt">float</span><span class="w"> </span><span class="n">pixelSizeWorld</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">clipW</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">proj</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">screenHeight</span><span class="p">);</span>
@@ -1098,57 +1182,66 @@ graph TD
 
 <p><img alt="Détail de l'anti-aliasing parfait des sphères" src="https://yoyonel.github.io/images/suckless-ogl/sphere_perfect_aa_detail.jpg">
 <em><center>Détail en gros plan : les bords des sphères sont parfaitement lisses grâce au <a href="#glossary-ray-tracing" title="Technique qui trace des rayons lumineux pour calculer l'intersection avec des objets">ray-tracing</a> analytique.</center></em></p>
-<h4>Projection billboard</h4>
+<h4 id="projection-billboard">Projection billboard</h4>
 <p><img alt="Optimisation de projection AABB des sphères" src="https://yoyonel.github.io/images/suckless-ogl/sphere_aabb_optimization_projective.png">
 <em><center>Le <a href="#glossary-vertex-shader" title="Shader qui traite chaque sommet de la géométrie (position, projection)">vertex shader</a> calcule un quad serré à l'écran via projection tangentielle analytique, gérant 3 cas : caméra dehors, dedans, ou derrière la sphère.</center></em></p>
 <hr>
-<h2>Chapitre 10 — Pipeline de post-processing</h2>
+<h2 id="chapitre-10-pipeline-de-post-processing">Chapitre 10 — Pipeline de post-processing</h2>
 <p>Après le rendu de la scène 3D dans le <a href="#glossary-fbo" title="Framebuffer Object — surface de rendu offscreen (on dessine dedans au lieu de l'écran)">FBO</a> <a href="#glossary-mrt" title="Multiple Render Targets — écrire dans plusieurs textures en une seule passe de rendu">MRT</a>, <code>postprocess_end()</code> applique jusqu'à <strong>8 effets</strong> dans un pipeline soigneusement ordonné.</p>
-<h3>10.1 — Le pipeline en 7 étapes</h3>
+<h3 id="101-le-pipeline-en-7-etapes">10.1 — Le pipeline en 7 étapes</h3>
 <pre class="mermaid">
 graph TD
-    A["Memory Barrier — flush écriture MRT"]
-    A --> B["① Bloom — Downsample → Seuil → Upsample"]
-    B --> C["② Profondeur de Champ — CoC → Flou bokeh"]
-    C --> D["③ Auto-Exposition — Réduction luminance → PBO readback"]
-    D --> E["④ Motion Blur — Tile-max velocity → Neighbor-max"]
-    E --> F["⑤ Bind 9 Textures + Upload UBO"]
-    F --> H["Draw fullscreen quad"]
-    H --> J["Vignette"]
-    J --> K["Grain film"]
-    K --> L["Balance des blancs"]
-    L --> M["Color Grading — Sat, Contraste, Gamma, Gain"]
-    M --> N["Tonemapping — courbe filmique"]
-    N --> O["Grading 3D LUT"]
-    O --> P["FXAA"]
-    P --> Q["Dithering — anti-banding"]
-    Q --> R["Brouillard atmosphérique"]
+    A("Memory Barrier — flush écriture MRT")
+    A --> B("① Bloom — Downsample → Seuil → Upsample")
+    B --> C("② Profondeur de Champ — CoC → Flou bokeh")
+    C --> D("③ Auto-Exposition — Réduction luminance → PBO readback")
+    D --> E("④ Motion Blur — Tile-max velocity → Neighbor-max")
+    E --> F("⑤ Bind 9 Textures + Upload UBO")
+    F --> H("Draw fullscreen quad")
+    H --> J("Vignette")
+    J --> K("Grain film")
+    K --> L("Balance des blancs")
+    L --> M("Color Grading — Sat, Contraste, Gamma, Gain")
+    M --> N("Tonemapping — courbe filmique")
+    N --> O("Grading 3D LUT")
+    O --> P("FXAA")
+    P --> Q("Dithering — anti-banding")
+    Q --> R("Brouillard atmosphérique")
+
+    classDef keyFunc fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef compute fill:#f3e5f5,stroke:#ab47bc,stroke-width:1.5px,color:#2d2d2d
+    classDef shader fill:#e3f2fd,stroke:#42a5f5,stroke-width:1.5px,color:#2d2d2d
+    classDef subsystem fill:#ffffff,stroke:#aaaaaa,stroke-width:1.5px,color:#444444
+
+    class A,F,H subsystem
+    class B,C,D,E compute
+    class J,K,L,M,N,O,P,Q,R shader
 </pre>
 
-<h3>10.2 — Galerie des effets de post-processing</h3>
+<h3 id="102-galerie-des-effets-de-post-processing">10.2 — Galerie des effets de post-processing</h3>
 <p>Voici le rendu <strong>vue de face</strong> avec différents effets activés individuellement — chaque image montre l'effet isolé appliqué à la même scène :</p>
-<h4>Sans post-processing (brut)</h4>
+<h4 id="sans-post-processing-brut">Sans post-processing (brut)</h4>
 <p><img alt="Rendu brut sans aucun post-processing" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_none.png">
 <em><center>Image brute en sortie du rendu <a href="#glossary-pbr" title="Physically-Based Rendering — modèle d'éclairage qui simule la physique réelle de la lumière">PBR</a> — pas de post-traitement appliqué.</center></em></p>
-<h4>FXAA (anti-aliasing rapide)</h4>
+<h4 id="fxaa-anti-aliasing-rapide">FXAA (anti-aliasing rapide)</h4>
 <p><img alt="Rendu avec FXAA activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_fxaa.png">
 <em><center><a href="#glossary-fxaa" title="Fast Approximate Anti-Aliasing — anti-crénelage rapide en post-process sur l'image finale">FXAA</a> (Fast Approximate Anti-Aliasing) — lisse les bords sans coût de <a href="#glossary-msaa" title="Multisample Anti-Aliasing — anti-crénelage géométrique (coûteux, évité ici)">MSAA</a>.</center></em></p>
-<h4>Bloom</h4>
+<h4 id="bloom">Bloom</h4>
 <p><img alt="Rendu avec Bloom activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_bloom.png">
 <em><center><a href="#glossary-bloom" title="Effet de halo lumineux autour des zones très brillantes (diffusion lumineuse de l'objectif)">Bloom</a> — les zones lumineuses débordent, simulant la diffusion lumineuse d'un objectif.</center></em></p>
-<h4>Depth of Field (Profondeur de champ)</h4>
+<h4 id="depth-of-field-profondeur-de-champ">Depth of Field (Profondeur de champ)</h4>
 <p><img alt="Rendu avec Depth of Field activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_dof.png">
 <em><center>Profondeur de champ — les objets hors focus sont floutés comme avec un vrai objectif.</center></em></p>
-<h4>Auto-Exposure</h4>
+<h4 id="auto-exposure">Auto-Exposure</h4>
 <p><img alt="Rendu avec Auto-Exposure activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_auto_exposure.png">
 <em><center><a href="#glossary-auto-exposition" title="Adaptation automatique de la luminosité de la scène (simule l'iris de l'œil)">Auto-exposition</a> — le moteur adapte l'exposition comme l'œil humain s'adaptant à la luminosité.</center></em></p>
-<h4>Motion Blur</h4>
+<h4 id="motion-blur">Motion Blur</h4>
 <p><img alt="Rendu avec Motion Blur activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_motion_blur.png">
 <em><center><a href="#glossary-motion-blur" title="Flou de mouvement par pixel simulant l'obturateur d'une caméra">Motion blur</a> par pixel — utilise les vecteurs de vélocité pour simuler le flou de mouvement cinématique.</center></em></p>
-<h4>Profil cinématique Sony A7S III</h4>
+<h4 id="profil-cinematique-sony-a7s-iii">Profil cinématique Sony A7S III</h4>
 <p><img alt="Rendu avec profil Sony A7S III" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_sony_a7siii.png">
 <em><center>Profil photographique complet Sony A7S III — <a href="#glossary-color-grading" title="Ajustement créatif des couleurs (saturation, contraste, gamma, teinte)">color grading</a>, balance, exposition et LUT 3D combinés pour un rendu cinématique.</center></em></p>
-<h3>10.3 — Optimisation shader par compilation conditionnelle</h3>
+<h3 id="103-optimisation-shader-par-compilation-conditionnelle">10.3 — Optimisation shader par compilation conditionnelle</h3>
 <p>Le <a href="#glossary-fragment-shader" title="Shader qui calcule la couleur de chaque pixel à l'écran">fragment shader</a> post-process utilise des <strong>#define au compile-time</strong> pour éliminer les branches :</p>
 <div class="highlight"><pre><span></span><code><span class="cp">#ifdef OPT_ENABLE_BLOOM</span>
 <span class="w">    </span><span class="n">color</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">bloomTexture</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">bloomIntensity</span><span class="p">;</span>
@@ -1160,16 +1253,16 @@ graph TD
 </code></pre></div>
 
 <p>Un <strong>cache LRU de 32 entrées</strong> stocke les variantes compilées pour différentes combinaisons de flags d'effets. Changer d'effet déclenche une recompilation paresseuse uniquement à la première occurrence d'une nouvelle combinaison.</p>
-<h3>10.4 — Courbes de tonemapping</h3>
+<h3 id="104-courbes-de-tonemapping">10.4 — Courbes de tonemapping</h3>
 <p><img alt="Courbes de tonemapping comparées" src="https://yoyonel.github.io/images/suckless-ogl/tonemapping_curves.png">
 <em><center>Comparaison des courbes de <a href="#glossary-tonemapping" title="Conversion des couleurs HDR (illimitées) en LDR affichable (0–255)">tonemapping</a> disponibles — le passage de <a href="#glossary-hdr" title="High Dynamic Range — valeurs de couleur supérieures à 1.0 (lumière réaliste)">HDR</a> linéaire à LDR affichable.</center></em></p>
-<h3>10.5 — Adaptation d'exposition</h3>
+<h3 id="105-adaptation-dexposition">10.5 — Adaptation d'exposition</h3>
 <p><img alt="Adaptation d'exposition au fil du temps" src="https://yoyonel.github.io/images/suckless-ogl/exposure_adaptation.jpg">
 <em><center>L'auto-exposition adapte progressivement la luminosité de la frame, comme l'iris de l'œil.</center></em></p>
 <hr>
-<h2>Chapitre 11 — La première frame visible</h2>
+<h2 id="chapitre-11-la-premiere-frame-visible">Chapitre 11 — La première frame visible</h2>
 <p>Voyons ce qui apparaît réellement à l'écran pendant les premières secondes :</p>
-<h3>Timeline de démarrage</h3>
+<h3 id="timeline-de-demarrage">Timeline de démarrage</h3>
 <table>
 <thead>
 <tr>
@@ -1206,7 +1299,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Frame en état stable</h3>
+<h3 id="frame-en-etat-stable">Frame en état stable</h3>
 <table>
 <thead>
 <tr>
@@ -1284,9 +1377,9 @@ graph TD
 </tbody>
 </table>
 <hr>
-<h2>Chapitre 12 — Budget mémoire GPU</h2>
+<h2 id="chapitre-12-budget-memoire-gpu">Chapitre 12 — Budget mémoire GPU</h2>
 <p>Voici une estimation de la consommation <a href="#glossary-vram" title="Mémoire dédiée du GPU — c'est là que vivent textures et buffers">VRAM</a> en état stable :</p>
-<h3>Textures</h3>
+<h3 id="textures">Textures</h3>
 <table>
 <thead>
 <tr>
@@ -1365,7 +1458,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Buffers</h3>
+<h3 id="buffers">Buffers</h3>
 <table>
 <thead>
 <tr>
@@ -1408,7 +1501,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Total estimé</h3>
+<h3 id="total-estime">Total estimé</h3>
 <table>
 <thead>
 <tr>
@@ -1439,7 +1532,7 @@ graph TD
 <p><strong>💡 Coût dominant</strong> : La map <a href="#glossary-hdr" title="High Dynamic Range — valeurs de couleur supérieures à 1.0 (lumière réaliste)">HDR</a> d'environnement + chaîne <a href="#glossary-bloom" title="Effet de halo lumineux autour des zones très brillantes (diffusion lumineuse de l'objectif)">bloom</a> + FBOs de scène dominent l'utilisation VRAM. La géométrie elle-même (100 quads <a href="#glossary-billboard" title="Quad (rectangle) toujours face à la caméra, utilisé ici comme surface de ray-tracing">billboard</a> × 4 vertices en mode par défaut) est négligeable — le vrai calcul de sphère se passe dans le <a href="#glossary-fragment-shader" title="Shader qui calcule la couleur de chaque pixel à l'écran">fragment shader</a> via <a href="#glossary-ray-tracing" title="Technique qui trace des rayons lumineux pour calculer l'intersection avec des objets">ray-tracing</a>.</p>
 </blockquote>
 <hr>
-<h2>Galerie : vues multi-angles</h2>
+<h2 id="galerie-vues-multi-angles">Galerie : vues multi-angles</h2>
 <p>Le moteur supporte des captures automatisées depuis différents angles de caméra, utilisées pour les tests de régression visuelle :</p>
 <table style="width:100%; border-collapse:collapse; border:none;">
 <tr>
@@ -1455,27 +1548,37 @@ graph TD
 </table>
 
 <hr>
-<h2>Pipeline de données global</h2>
+<h2 id="pipeline-de-donnees-global">Pipeline de données global</h2>
 <pre class="mermaid">
 graph TD
-    POLL["① CPU — glfwPollEvents()"] --> TIME["② CPU — Calcul Δt"]
-    TIME --> CAM["③ CPU — Physique caméra 60Hz"]
-    CAM --> SORT["④ CPU → GPU — Tri des sphères"]
-    SORT --> FBO["⑤ GPU — Bind Scene FBO, Clear"]
-    FBO --> SKY["🌅 Pass Skybox — Sampling equirectangulaire"]
-    SKY --> SPHERES["🔮 Pass Billboard — 1 draw call, 100 instances, ray-tracing"]
-    SPHERES --> BLOOM["✨ Bloom + DoF + Auto-Exposure + Motion Blur"]
-    BLOOM --> COMP["🎬 Composite Final — 9 textures, UBO, fullscreen quad"]
-    COMP --> UI["🖥️ UI Overlay + Profiler + Transition"]
-    UI --> SWAP["⑩ glfwSwapBuffers()"]
+    POLL("① CPU — glfwPollEvents()") --> TIME("② CPU — Calcul Δt")
+    TIME --> CAM("③ CPU — Physique caméra 60Hz")
+    CAM --> SORT("④ CPU → GPU — Tri des sphères")
+    SORT --> FBO("⑤ GPU — Bind Scene FBO, Clear")
+    FBO --> SKY("🌅 Pass Skybox — Sampling equirectangulaire")
+    SKY --> SPHERES("🔮 Pass Billboard — 1 draw call, 100 instances, ray-tracing")
+    SPHERES --> BLOOM("✨ Bloom + DoF + Auto-Exposure + Motion Blur")
+    BLOOM --> COMP("🎬 Composite Final — 9 textures, UBO, fullscreen quad")
+    COMP --> UI("🖥️ UI Overlay + Profiler + Transition")
+    UI --> SWAP("⑩ glfwSwapBuffers()")
+
+    classDef cpu fill:#e3f2fd,stroke:#42a5f5,stroke-width:1.5px,color:#2d2d2d
+    classDef gpu fill:#fff59d,stroke:#f9a825,stroke-width:2px,color:#2d2d2d
+    classDef postfx fill:#f3e5f5,stroke:#ab47bc,stroke-width:1.5px,color:#2d2d2d
+    classDef subsystem fill:#ffffff,stroke:#aaaaaa,stroke-width:1.5px,color:#444444
+
+    class POLL,TIME,CAM,SORT cpu
+    class FBO,SKY,SPHERES gpu
+    class BLOOM,COMP postfx
+    class UI,SWAP subsystem
 </pre>
 
 <hr>
-<h2>Glossaire</h2>
+<h2 id="glossaire">Glossaire</h2>
 <blockquote>
 <p>Référence rapide des termes techniques utilisés dans l'article, avec liens vers la documentation officielle.</p>
 </blockquote>
-<h3>Langages, API &amp; Standards</h3>
+<h3 id="langages-api-standards">Langages, API &amp; Standards</h3>
 <table>
 <thead>
 <tr>
@@ -1537,7 +1640,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Rendu 3D — Concepts fondamentaux</h3>
+<h3 id="rendu-3d-concepts-fondamentaux">Rendu 3D — Concepts fondamentaux</h3>
 <table>
 <thead>
 <tr>
@@ -1614,7 +1717,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Objets GPU OpenGL</h3>
+<h3 id="objets-gpu-opengl">Objets GPU OpenGL</h3>
 <table>
 <thead>
 <tr>
@@ -1666,7 +1769,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Ray-Tracing &amp; Géométrie</h3>
+<h3 id="ray-tracing-geometrie">Ray-Tracing &amp; Géométrie</h3>
 <table>
 <thead>
 <tr>
@@ -1728,7 +1831,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>PBR &amp; Éclairage</h3>
+<h3 id="pbr-eclairage">PBR &amp; Éclairage</h3>
 <table>
 <thead>
 <tr>
@@ -1810,7 +1913,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Post-Processing</h3>
+<h3 id="post-processing">Post-Processing</h3>
 <table>
 <thead>
 <tr>
@@ -1947,7 +2050,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Architecture &amp; Performance</h3>
+<h3 id="architecture-performance">Architecture &amp; Performance</h3>
 <table>
 <thead>
 <tr>
@@ -2024,7 +2127,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Mathématiques &amp; Caméra</h3>
+<h3 id="mathematiques-camera">Mathématiques &amp; Caméra</h3>
 <table>
 <thead>
 <tr>
@@ -2096,7 +2199,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Algorithmes de tri</h3>
+<h3 id="algorithmes-de-tri">Algorithmes de tri</h3>
 <table>
 <thead>
 <tr>
@@ -2123,7 +2226,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Multithreading</h3>
+<h3 id="multithreading">Multithreading</h3>
 <table>
 <thead>
 <tr>
@@ -2150,7 +2253,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<h3>Divers</h3>
+<h3 id="divers">Divers</h3>
 <table>
 <thead>
 <tr>
@@ -2223,7 +2326,7 @@ graph TD
 </tbody>
 </table>
 <hr>
-<h2>Conclusion</h2>
+<h2 id="conclusion">Conclusion</h2>
 <p><strong>suckless-ogl</strong> démontre qu'un moteur PBR complet peut être construit avec un code C11 lisible, un pipeline de rendu clair et des performances GPU mesurées en millisecondes. Les choix de design — billboard ray-tracing au lieu de mesh, chargement HDR asynchrone, IBL progressive, post-processing modulaire — montrent comment résoudre des problèmes graphiques réels avec élégance.</p>
 <p>Le code source complet est disponible sur <a href="https://github.com/yoyonel/suckless-ogl">GitHub</a>, et la documentation technique détaillée sur <a href="https://yoyonel.github.io/suckless-ogl/">yoyonel.github.io/suckless-ogl</a>.</p>
 <p><em>Dans les prochains articles, on explorera les projets Vulkan et NVRHI qui poussent ces concepts encore plus loin.</em></p>
