@@ -2,6 +2,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="HandheldFriendly" content="True" />
@@ -29,21 +31,15 @@
   <link rel="stylesheet" type="text/css" href="https://yoyonel.github.io/theme/font-awesome/css/brands.css">
   <link rel="stylesheet" type="text/css" href="https://yoyonel.github.io/theme/font-awesome/css/solid.css">
 
+  <link rel="stylesheet" type="text/css" href="/css/custom.css">
 
+  <link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
 
 
   <link href="https://yoyonel.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Bloggy le Blog Atom">
 
 
-<script type="text/javascript">
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-  ga('create', 'UA-155727660-1', 'auto');
-  ga('send', 'pageview');
-</script>
 
 
 
@@ -87,12 +83,11 @@
 <link rel="stylesheet" href="/css/glossary-tooltip.css" type="text/css">
 </head>
 <body >
-<script src="/js/mermaid-init.js"></script>
 
 <aside>
   <div>
     <a href="https://yoyonel.github.io/">
-      <img src="/images/avatar.gif" alt="Bloggy le Blog" title="Bloggy le Blog">
+      <img loading="lazy" src="/images/avatar.gif" alt="Bloggy le Blog" title="Bloggy le Blog">
     </a>
 
     <h1>
@@ -164,7 +159,7 @@
   <div>
     <h1 id="anatomie-dune-frame-le-cycle-de-vie-complet-de-suckless-ogl">Anatomie d'une frame : le cycle de vie complet de suckless-ogl</h1>
 <p><em>De <code>main()</code> aux photons sur l'écran — une plongée complète dans un moteur <a href="#glossary-pbr" title="Physically-Based Rendering — modèle d'éclairage qui simule la physique réelle de la lumière">PBR</a> OpenGL moderne écrit en C.</em></p>
-<p><img alt="Le rendu final de suckless-ogl — 100 sphères PBR éclairées par IBL" src="https://yoyonel.github.io/images/suckless-ogl/reference_image.png">
+<p><img loading="lazy" alt="Le rendu final de suckless-ogl — 100 sphères PBR éclairées par IBL" src="https://yoyonel.github.io/images/suckless-ogl/reference_image.webp">
 <em><center>Le rendu final : 100 sphères métalliques et diélectriques, éclairées par une <a href="#glossary-hdr" title="High Dynamic Range — valeurs de couleur supérieures à 1.0 (lumière réaliste)">HDR</a> d'environnement, avec post-processing complet.</center></em></p>
 <hr>
 <h2 id="introduction">Introduction</h2>
@@ -384,7 +379,7 @@ sequenceDiagram
 <li><strong><a href="#glossary-z-clip" title="Plans de découpage proche et lointain de la caméra — définissent la plage de profondeur visible">Z-clip</a></strong> : [0.1, 1000.0]</li>
 </ul>
 <p>Elle utilise un <strong>modèle <a href="#glossary-pas-fixe-fixed-timestep" title="Mise à jour de la physique à intervalle constant (ex: 60 Hz) indépendamment du framerate">physique à pas fixe</a></strong> (60 Hz) avec lissage exponentiel pour la rotation :</p>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 graph LR
     subgraph "Pipeline de mise à jour caméra"
         A("Delta souris") -->|"Filtre EMA"| B("yaw_target / pitch_target")
@@ -408,14 +403,14 @@ graph LR
     class D,F keyFunc
     class A,B,C,E subsystem
     class G,H,I,J,K loopNode
-</pre>
+</template></pre>
 
 <h3 id="32-thread-de-chargement-asynchrone">3.2 — Thread de chargement asynchrone</h3>
 <div class="highlight"><pre><span></span><code><span class="n">app</span><span class="o">-&gt;</span><span class="n">async_loader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">async_loader_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">app</span><span class="o">-&gt;</span><span class="n">tracy_mgr</span><span class="p">);</span>
 </code></pre></div>
 
 <p>Un <strong><a href="#glossary-posix-threads" title="API standard de threads sur Unix/Linux (pthread_create, pthread_cond_wait)">thread POSIX</a> dédié</strong> est créé pour les I/O en arrière-plan. Il dort sur une <a href="#glossary-variable-de-condition" title="Mécanisme de synchronisation : un thread dort jusqu'à ce qu'un autre le réveille">variable de condition</a> (<code>pthread_cond_wait</code>) jusqu'à ce qu'un travail soit soumis. Cela empêche les lectures disque de bloquer la boucle de rendu.</p>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 stateDiagram-v2
     [*] --> IDLE
     IDLE --> PENDING: async_loader_request()
@@ -424,7 +419,7 @@ stateDiagram-v2
     WAITING_FOR_PBO --> CONVERTING: Le thread principal fournit le PBO
     CONVERTING --> READY: Conversion SIMD Float→Half terminée
     READY --> IDLE: Le thread principal consomme le résultat
-</pre>
+</template></pre>
 
 <hr>
 <h2 id="chapitre-4-initialisation-de-la-scene-le-gpu-se-reveille">Chapitre 4 — Initialisation de la scène (le GPU se réveille)</h2>
@@ -484,7 +479,7 @@ stateDiagram-v2
 <p>Le moteur supporte deux stratégies de rendu de sphères. Le <strong>mode par défaut</strong> est le <a href="#glossary-billboard" title="Quad (rectangle) toujours face à la caméra, utilisé ici comme surface de ray-tracing">billboard</a> <a href="#glossary-ray-tracing" title="Technique qui trace des rayons lumineux pour calculer l'intersection avec des objets">ray-tracing</a>.</p>
 <h4 id="mode-par-defaut-billboard-ray-tracing-par-pixel-billboard_mode-1">Mode par défaut : Billboard + Ray-Tracing par pixel (billboard_mode = 1)</h4>
 <p>Chaque sphère est rendue comme un <strong>simple <a href="#glossary-quad" title="Rectangle composé de 2 triangles — la primitive 2D de base">quad</a> aligné à l'écran</strong> (4 vertices, 2 triangles). Le fragment <a href="#glossary-shader" title="Programme exécuté directement sur le GPU (vertex, fragment, compute)">shader</a> effectue une <strong>intersection rayon-sphère analytique</strong> par pixel, produisant des sphères mathématiquement parfaites.</p>
-<p><img alt="Géométrie AABB du billboard — le quad projeté enveloppe la sphère à l'écran" src="https://yoyonel.github.io/images/suckless-ogl/billboard_aabb_geometry.png">
+<p><img loading="lazy" alt="Géométrie AABB du billboard — le quad projeté enveloppe la sphère à l'écran" src="https://yoyonel.github.io/images/suckless-ogl/billboard_aabb_geometry.webp">
 <em><center>Le <a href="#glossary-vertex-shader" title="Shader qui traite chaque sommet de la géométrie (position, projection)">vertex shader</a> projette un quad serré autour de la <a href="#glossary-aabb" title="Axis-Aligned Bounding Box — boîte englobante alignée aux axes, pour le culling rapide">bounding box</a> à l'écran de la sphère via calcul de tangentes analytiques.</center></em></p>
 <p><strong>Avantages</strong> :</p>
 <ul>
@@ -494,7 +489,7 @@ stateDiagram-v2
 <li><a href="#glossary-anti-aliasing" title="Technique de lissage des bords en escalier (aliasing) pour un rendu visuellement plus propre">Anti-aliasing</a> des bords via atténuation douce du <a href="#glossary-discriminant" title="Valeur mathématique (b²−c) déterminant si un rayon touche une sphère">discriminant</a></li>
 <li>Vraie transparence alpha (aspect verre, avec tri <a href="#glossary-back-to-front" title="Ordre de rendu du plus loin au plus proche, nécessaire pour la transparence correcte">back-to-front</a>)</li>
 </ul>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 graph LR
     subgraph "Billboard Ray-Tracing (Défaut)"
         A("Quad 4-vertex<br/>(par instance)") -->|"Vertex Shader :<br/>projection sur bounds sphère"| B("Quad écran")
@@ -510,14 +505,14 @@ graph LR
 
     class A,B,C highlight
     class D,E fallback
-</pre>
+</template></pre>
 
 <blockquote>
 <p><strong>💡 Pourquoi le <a href="#glossary-billboard" title="Quad (rectangle) toujours face à la caméra, utilisé ici comme surface de ray-tracing">billboard</a> ray-tracing ?</strong> Avec 100 sphères, l'approche billboard utilise <strong>100 × 4 = 400 vertices</strong> au total, versus <strong>100 × 642 = 64 200 vertices</strong> pour des <a href="#glossary-icosphre" title="Sphère construite en subdivisant un icosaèdre (20 faces) — plus uniforme qu'une UV sphere">icosphères</a> niveau 3. Plus important encore, les sphères sont <strong>mathématiquement parfaites</strong> à tout niveau de zoom — aucun artefact de <a href="#glossary-tessellation" title="Subdivision de la géométrie en triangles plus fins pour plus de détail">tessellation</a>.</p>
 </blockquote>
 <h4 id="fallback-mesh-icosphere-instancie-billboard_mode-0">Fallback : Mesh icosphère instancié (billboard_mode = 0)</h4>
 <p>Le chemin <a href="#glossary-icosphre" title="Sphère construite en subdivisant un icosaèdre (20 faces) — plus uniforme qu'une UV sphere">icosphère</a> génère un <a href="#glossary-icosphre" title="Sphère construite en subdivisant un icosaèdre (20 faces) — plus uniforme qu'une UV sphere">icosaèdre</a> subdivisé récursivement :</p>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 graph LR
     A("Niveau 0<br/>12 vertices<br/>20 triangles") -->|"Subdiviser"| B("Niveau 1<br/>42 vertices<br/>80 triangles")
     B -->|"Subdiviser"| C("Niveau 2<br/>162 vertices<br/>320 triangles")
@@ -529,7 +524,7 @@ graph LR
 
     class D keyFunc
     class A,B,C,E subsystem
-</pre>
+</template></pre>
 
 <h3 id="44-bibliotheque-de-materiaux">4.4 — Bibliothèque de matériaux</h3>
 <div class="highlight"><pre><span></span><code><span class="n">scene</span><span class="o">-&gt;</span><span class="n">material_lib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">material_load_presets</span><span class="p">(</span><span class="s">&quot;assets/materials/pbr_materials.json&quot;</span><span class="p">);</span>
@@ -646,7 +641,7 @@ Location 2–7 : glVertexAttribDivisor = 1 (avance par instance)
 </code></pre></div>
 
 <p>Ce système inline récursivement les fichiers (profondeur max : 16), avec déduplication type <a href="#glossary-include-guard" title="Mécanisme de déduplication qui empêche un fichier d'être inclus plusieurs fois">include-guard</a>.</p>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 graph TD
     INIT("scene_init() — Compilation des shaders") --> REND
     INIT --> COMP
@@ -683,7 +678,7 @@ graph TD
     class PBR,BB,SKY,UI render
     class SPMAP,IRMAP,BRDF,LUM compute
     class PP,BL postfx
-</pre>
+</template></pre>
 
 <hr>
 <h2 id="chapitre-5-setup-du-pipeline-de-post-processing">Chapitre 5 — Setup du pipeline de post-processing</h2>
@@ -728,7 +723,7 @@ graph TD
 </tr>
 </tbody>
 </table>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 graph TD
     FBO("FBO de Scène — Multi-Render Target") --> C0
     FBO --> C1
@@ -751,7 +746,7 @@ graph TD
     class C1 color1
     class DS depth
     class SV stencil
-</pre>
+</template></pre>
 
 <h3 id="52-ressources-des-sous-effets">5.2 — Ressources des sous-effets</h3>
 <p>Chaque effet de post-processing initialise ses propres ressources :</p>
@@ -797,7 +792,7 @@ graph TD
 
 <p>Cela déclenche le <strong>pipeline de <a href="#glossary-chargement-asynchrone" title="Exécuter les I/O disque sur un thread séparé pour ne pas bloquer le rendu">chargement asynchrone</a> d'environnement</strong> — l'opération multi-frame la plus complexe du moteur.</p>
 <h3 id="61-sequence-de-chargement-async">6.1 — Séquence de chargement async</h3>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 sequenceDiagram
     participant Main as Thread Principal (Rendu)
     participant Worker as Thread Worker Async
@@ -822,17 +817,17 @@ sequenceDiagram
     Main->>GPU: glTexSubImage2D(depuis PBO)
     Note over GPU: Transfert DMA : PBO → VRAM
     Main->>GPU: glGenerateMipmap()
-</pre>
+</template></pre>
 
 <h3 id="62-machine-a-etats-de-transition">6.2 — Machine à états de transition</h3>
 <p>Pendant le premier chargement, l'écran reste <strong>noir</strong> (pas de crossfade depuis une scène précédente) :</p>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 stateDiagram-v2
     [*] --> WAIT_IBL: "Premier chargement"
     WAIT_IBL --> WAIT_IBL: "IBL en cours..."
     WAIT_IBL --> FADE_IN: "IBL terminé"
     FADE_IN --> IDLE: "Alpha atteint 0"
-</pre>
+</template></pre>
 
 <p><strong><code>WAIT_IBL</code></strong> : <code>transition_alpha = 1.0</code> (noir opaque complet) — l'écran est noir pendant les premières frames.</p>
 <p><strong><code>FADE_IN</code></strong> : l'alpha diminue de 1.0 → 0.0 sur 250ms.</p>
@@ -840,7 +835,7 @@ stateDiagram-v2
 <h2 id="chapitre-7-generation-ibl-progressive-multi-frame">Chapitre 7 — Génération <a href="#glossary-ibl" title="Image-Based Lighting — éclairage extrait d'une image panoramique HDR de l'environnement">IBL</a> (progressive, multi-frame)</h2>
 <p>Une fois la texture <a href="#glossary-hdr" title="High Dynamic Range — valeurs de couleur supérieures à 1.0 (lumière réaliste)">HDR</a> uploadée, le <strong>coordinateur <a href="#glossary-ibl" title="Image-Based Lighting — éclairage extrait d'une image panoramique HDR de l'environnement">IBL</a></strong> (<a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/ibl_coordinator.c">src/ibl_coordinator.c</a>) prend le relais. Il calcule trois maps sur plusieurs frames pour éviter les <a href="#glossary-gpu-stall" title="Blocage du pipeline GPU quand il attend une ressource ou une synchronisation — provoque des chutes de framerate">stalls GPU</a>.</p>
 <h3 id="71-les-trois-maps-ibl">7.1 — Les trois maps <a href="#glossary-ibl" title="Image-Based Lighting — éclairage extrait d'une image panoramique HDR de l'environnement">IBL</a></h3>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 graph TB
     HDR("Map d'environnement HDR<br/>2048×1024 equirectangulaire<br/>GL_RGBA16F") --> SPEC
     HDR --> IRR
@@ -861,7 +856,7 @@ graph TB
     class HDR keyFunc
     class SPEC,IRR,LUM compute
     class PBR,PP target
-</pre>
+</template></pre>
 
 <table>
 <thead>
@@ -935,7 +930,7 @@ graph TB
 </tr>
 </tbody>
 </table>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 gantt
     title Timeline de génération IBL progressive
     dateFormat x
@@ -963,7 +958,7 @@ gantt
 
     section Terminé
     IBL Complet → Fade In  :ibl_done, 12000, 13000
-</pre>
+</template></pre>
 
 <h3 id="73-machine-a-etats-ibl">7.3 — Machine à états IBL</h3>
 <div class="highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="n">IBLState</span><span class="w"> </span><span class="p">{</span>
@@ -980,7 +975,7 @@ gantt
 <hr>
 <h2 id="chapitre-8-la-boucle-principale">Chapitre 8 — La boucle principale</h2>
 <p><code>app_run()</code> (<a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/app.c">src/app.c</a>) est le battement de cœur — une <strong><a href="#glossary-game-loop" title="Boucle principale d'un jeu : lire les entrées → mettre à jour → dessiner → recommencer">boucle de jeu</a> non capée</strong> classique avec <a href="#glossary-pas-fixe-fixed-timestep" title="Mise à jour de la physique à intervalle constant (ex: 60 Hz) indépendamment du framerate">physique à pas fixe</a>.</p>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 graph TD
     A("① glfwPollEvents() — Clavier, souris, resize")
     A --> B("② Temps & FPS — delta_time, frame_count")
@@ -999,7 +994,7 @@ graph TD
     class F keyFunc
     class A,B,C,D,E,G loopNode
     class H subsystem
-</pre>
+</template></pre>
 
 <h3 id="81-resize-differe">8.1 — Resize différé</h3>
 <p>Les événements de redimensionnement sont <strong>différés</strong> — le callback <a href="#glossary-glfw" title="Bibliothèque C pour créer des fenêtres et gérer les entrées clavier/souris">GLFW</a> enregistre seulement les nouvelles dimensions. La recréation réelle des FBOs se fait au début de la frame suivante, hors du contexte limité du callback.</p>
@@ -1022,7 +1017,7 @@ graph TD
 <h2 id="chapitre-9-le-rendu-dune-frame">Chapitre 9 — Le rendu d'une frame</h2>
 <p><code>renderer_draw_frame()</code> (<a href="https://github.com/yoyonel/suckless-ogl/blob/master/src/renderer.c">src/renderer.c</a>) orchestre le pipeline de rendu complet.</p>
 <h3 id="91-architecture-haut-niveau">9.1 — Architecture haut niveau</h3>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 graph TD
     A("GPU Profiler Begin") --> B("postprocess_begin() — Bind Scene FBO, Clear")
     B --> C("camera_get_view_matrix()")
@@ -1042,7 +1037,7 @@ graph TD
     class G1,G2,G3 keyFunc
     class A,B,C,D,E setup
     class H,I postfx
-</pre>
+</template></pre>
 
 <h3 id="92-pass-1-skybox">9.2 — Pass 1 : Skybox</h3>
 <p>La <a href="#glossary-skybox" title="Image panoramique affichée en fond de scène comme ciel/environnement">skybox</a> est dessinée <strong>en premier</strong>, avec le test de profondeur <strong>désactivé</strong>. Elle utilise une astuce de <a href="#glossary-quad" title="Rectangle composé de 2 triangles — la primitive 2D de base">quad</a> plein écran :</p>
@@ -1130,7 +1125,7 @@ graph TD
 </table>
 <h3 id="95-le-fragment-shader-billboard-intersection-rayon-sphere">9.5 — Le fragment shader billboard (intersection rayon-sphère)</h3>
 <p>Le <a href="#glossary-fragment-shader" title="Shader qui calcule la couleur de chaque pixel à l'écran">fragment shader</a> (<code>pbr_ibl_billboard.frag</code>) est là où la magie opère. Au lieu de <a href="#glossary-shader" title="Programme exécuté directement sur le GPU (vertex, fragment, compute)">shader</a> un <a href="#glossary-mesh" title="Ensemble de triangles formant un objet 3D">mesh</a> rastérisé, il <strong>intersecte analytiquement un rayon avec une sphère parfaite</strong> :</p>
-<p><img alt="Intersection rayon-sphère — le principe géométrique" src="https://yoyonel.github.io/images/suckless-ogl/sphere_intersection.jpg">
+<p><img loading="lazy" alt="Intersection rayon-sphère — le principe géométrique" src="https://yoyonel.github.io/images/suckless-ogl/sphere_intersection.webp">
 <em><center>Intersection rayon-sphère analytique : le <a href="#glossary-discriminant" title="Valeur mathématique (b²−c) déterminant si un rayon touche une sphère">discriminant</a> détermine si le pixel touche la sphère.</center></em></p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Intersection rayon-sphère analytique</span>
 <span class="kt">vec3</span><span class="w"> </span><span class="n">oc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rayOrigin</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">center</span><span class="p">;</span>
@@ -1143,7 +1138,7 @@ graph TD
 <span class="kt">vec3</span><span class="w"> </span><span class="n">N</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">normalize</span><span class="p">(</span><span class="n">hitPos</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">center</span><span class="p">);</span><span class="w">  </span><span class="c1">// normale analytique parfaite</span>
 </code></pre></div>
 
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 graph TD
     R("🔦 Construction rayon — origin=camPos, dir=normalize(WorldPos-camPos)")
     R --> INT("📐 Intersection Rayon-Sphère — discriminant = b² - c")
@@ -1171,26 +1166,26 @@ graph TD
     class HITPOS,NORMAL,DEPTH,PBR compute
     class FRESNEL,GGX,NDF,SPEC,DIFF subsystem
     class FINAL,AA,ALPHA,DISCARD entryExit
-</pre>
+</template></pre>
 
 <h4 id="anti-aliasing-analytique-des-bords">Anti-aliasing analytique des bords</h4>
-<p><img alt="Anti-aliasing analytique des sphères — smoothstep sur le discriminant" src="https://yoyonel.github.io/images/suckless-ogl/sphere_analytic_aa.jpg">
+<p><img loading="lazy" alt="Anti-aliasing analytique des sphères — smoothstep sur le discriminant" src="https://yoyonel.github.io/images/suckless-ogl/sphere_analytic_aa.webp">
 <em><center>L'anti-aliasing analytique utilise le discriminant comme métrique de distance au bord — pas besoin de <a href="#glossary-msaa" title="Multisample Anti-Aliasing — anti-crénelage géométrique (coûteux, évité ici)">MSAA</a> pour des bords lisses.</center></em></p>
 <div class="highlight"><pre><span></span><code><span class="kt">float</span><span class="w"> </span><span class="n">pixelSizeWorld</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">clipW</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">proj</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">screenHeight</span><span class="p">);</span>
 <span class="kt">float</span><span class="w"> </span><span class="n">edgeFactor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">smoothstep</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">discriminant</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">radius</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">pixelSizeWorld</span><span class="p">));</span>
 <span class="n">FragColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">vec4</span><span class="p">(</span><span class="n">color</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">edgeFactor</span><span class="p">,</span><span class="w"> </span><span class="n">edgeFactor</span><span class="p">);</span><span class="w">  </span><span class="c1">// alpha prémultiplié</span>
 </code></pre></div>
 
-<p><img alt="Détail de l'anti-aliasing parfait des sphères" src="https://yoyonel.github.io/images/suckless-ogl/sphere_perfect_aa_detail.jpg">
+<p><img loading="lazy" alt="Détail de l'anti-aliasing parfait des sphères" src="https://yoyonel.github.io/images/suckless-ogl/sphere_perfect_aa_detail.webp">
 <em><center>Détail en gros plan : les bords des sphères sont parfaitement lisses grâce au <a href="#glossary-ray-tracing" title="Technique qui trace des rayons lumineux pour calculer l'intersection avec des objets">ray-tracing</a> analytique.</center></em></p>
 <h4 id="projection-billboard">Projection billboard</h4>
-<p><img alt="Optimisation de projection AABB des sphères" src="https://yoyonel.github.io/images/suckless-ogl/sphere_aabb_optimization_projective.png">
+<p><img loading="lazy" alt="Optimisation de projection AABB des sphères" src="https://yoyonel.github.io/images/suckless-ogl/sphere_aabb_optimization_projective.webp">
 <em><center>Le <a href="#glossary-vertex-shader" title="Shader qui traite chaque sommet de la géométrie (position, projection)">vertex shader</a> calcule un quad serré à l'écran via projection tangentielle analytique, gérant 3 cas : caméra dehors, dedans, ou derrière la sphère.</center></em></p>
 <hr>
 <h2 id="chapitre-10-pipeline-de-post-processing">Chapitre 10 — Pipeline de post-processing</h2>
 <p>Après le rendu de la scène 3D dans le <a href="#glossary-fbo" title="Framebuffer Object — surface de rendu offscreen (on dessine dedans au lieu de l'écran)">FBO</a> <a href="#glossary-mrt" title="Multiple Render Targets — écrire dans plusieurs textures en une seule passe de rendu">MRT</a>, <code>postprocess_end()</code> applique jusqu'à <strong>8 effets</strong> dans un pipeline soigneusement ordonné.</p>
 <h3 id="101-le-pipeline-en-7-etapes">10.1 — Le pipeline en 7 étapes</h3>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 graph TD
     A("Memory Barrier — flush écriture MRT")
     A --> B("① Bloom — Downsample → Seuil → Upsample")
@@ -1217,30 +1212,30 @@ graph TD
     class A,F,H subsystem
     class B,C,D,E compute
     class J,K,L,M,N,O,P,Q,R shader
-</pre>
+</template></pre>
 
 <h3 id="102-galerie-des-effets-de-post-processing">10.2 — Galerie des effets de post-processing</h3>
 <p>Voici le rendu <strong>vue de face</strong> avec différents effets activés individuellement — chaque image montre l'effet isolé appliqué à la même scène :</p>
 <h4 id="sans-post-processing-brut">Sans post-processing (brut)</h4>
-<p><img alt="Rendu brut sans aucun post-processing" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_none.png">
+<p><img loading="lazy" alt="Rendu brut sans aucun post-processing" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_none.webp">
 <em><center>Image brute en sortie du rendu <a href="#glossary-pbr" title="Physically-Based Rendering — modèle d'éclairage qui simule la physique réelle de la lumière">PBR</a> — pas de post-traitement appliqué.</center></em></p>
 <h4 id="fxaa-anti-aliasing-rapide">FXAA (anti-aliasing rapide)</h4>
-<p><img alt="Rendu avec FXAA activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_fxaa.png">
+<p><img loading="lazy" alt="Rendu avec FXAA activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_fxaa.webp">
 <em><center><a href="#glossary-fxaa" title="Fast Approximate Anti-Aliasing — anti-crénelage rapide en post-process sur l'image finale">FXAA</a> (Fast Approximate Anti-Aliasing) — lisse les bords sans coût de <a href="#glossary-msaa" title="Multisample Anti-Aliasing — anti-crénelage géométrique (coûteux, évité ici)">MSAA</a>.</center></em></p>
 <h4 id="bloom">Bloom</h4>
-<p><img alt="Rendu avec Bloom activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_bloom.png">
+<p><img loading="lazy" alt="Rendu avec Bloom activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_bloom.webp">
 <em><center><a href="#glossary-bloom" title="Effet de halo lumineux autour des zones très brillantes (diffusion lumineuse de l'objectif)">Bloom</a> — les zones lumineuses débordent, simulant la diffusion lumineuse d'un objectif.</center></em></p>
 <h4 id="depth-of-field-profondeur-de-champ">Depth of Field (Profondeur de champ)</h4>
-<p><img alt="Rendu avec Depth of Field activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_dof.png">
+<p><img loading="lazy" alt="Rendu avec Depth of Field activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_dof.webp">
 <em><center>Profondeur de champ — les objets hors focus sont floutés comme avec un vrai objectif.</center></em></p>
 <h4 id="auto-exposure">Auto-Exposure</h4>
-<p><img alt="Rendu avec Auto-Exposure activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_auto_exposure.png">
+<p><img loading="lazy" alt="Rendu avec Auto-Exposure activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_auto_exposure.webp">
 <em><center><a href="#glossary-auto-exposition" title="Adaptation automatique de la luminosité de la scène (simule l'iris de l'œil)">Auto-exposition</a> — le moteur adapte l'exposition comme l'œil humain s'adaptant à la luminosité.</center></em></p>
 <h4 id="motion-blur">Motion Blur</h4>
-<p><img alt="Rendu avec Motion Blur activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_motion_blur.png">
+<p><img loading="lazy" alt="Rendu avec Motion Blur activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_motion_blur.webp">
 <em><center><a href="#glossary-motion-blur" title="Flou de mouvement par pixel simulant l'obturateur d'une caméra">Motion blur</a> par pixel — utilise les vecteurs de vélocité pour simuler le flou de mouvement cinématique.</center></em></p>
 <h4 id="profil-cinematique-sony-a7s-iii">Profil cinématique Sony A7S III</h4>
-<p><img alt="Rendu avec profil Sony A7S III" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_sony_a7siii.png">
+<p><img loading="lazy" alt="Rendu avec profil Sony A7S III" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_sony_a7siii.webp">
 <em><center>Profil photographique complet Sony A7S III — <a href="#glossary-color-grading" title="Ajustement créatif des couleurs (saturation, contraste, gamma, teinte)">color grading</a>, balance, exposition et LUT 3D combinés pour un rendu cinématique.</center></em></p>
 <h3 id="103-optimisation-shader-par-compilation-conditionnelle">10.3 — Optimisation shader par compilation conditionnelle</h3>
 <p>Le <a href="#glossary-fragment-shader" title="Shader qui calcule la couleur de chaque pixel à l'écran">fragment shader</a> post-process utilise des <strong>#define au compile-time</strong> pour éliminer les branches :</p>
@@ -1255,10 +1250,10 @@ graph TD
 
 <p>Un <strong>cache LRU de 32 entrées</strong> stocke les variantes compilées pour différentes combinaisons de flags d'effets. Changer d'effet déclenche une recompilation paresseuse uniquement à la première occurrence d'une nouvelle combinaison.</p>
 <h3 id="104-courbes-de-tonemapping">10.4 — Courbes de tonemapping</h3>
-<p><img alt="Courbes de tonemapping comparées" src="https://yoyonel.github.io/images/suckless-ogl/tonemapping_curves.png">
+<p><img loading="lazy" alt="Courbes de tonemapping comparées" src="https://yoyonel.github.io/images/suckless-ogl/tonemapping_curves.webp">
 <em><center>Comparaison des courbes de <a href="#glossary-tonemapping" title="Conversion des couleurs HDR (illimitées) en LDR affichable (0–255)">tonemapping</a> disponibles — le passage de <a href="#glossary-hdr" title="High Dynamic Range — valeurs de couleur supérieures à 1.0 (lumière réaliste)">HDR</a> linéaire à LDR affichable.</center></em></p>
 <h3 id="105-adaptation-dexposition">10.5 — Adaptation d'exposition</h3>
-<p><img alt="Adaptation d'exposition au fil du temps" src="https://yoyonel.github.io/images/suckless-ogl/exposure_adaptation.jpg">
+<p><img loading="lazy" alt="Adaptation d'exposition au fil du temps" src="https://yoyonel.github.io/images/suckless-ogl/exposure_adaptation.webp">
 <em><center>L'auto-exposition adapte progressivement la luminosité de la frame, comme l'iris de l'œil.</center></em></p>
 <hr>
 <h2 id="chapitre-11-la-premiere-frame-visible">Chapitre 11 — La première frame visible</h2>
@@ -1537,20 +1532,20 @@ graph TD
 <p>Le moteur supporte des captures automatisées depuis différents angles de caméra, utilisées pour les tests de régression visuelle :</p>
 <table style="width:100%; border-collapse:collapse; border:none;">
 <tr>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_front.png" alt="Vue de face" style="max-width:100%;"><br><em>Face</em></td>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_left.png" alt="Vue de gauche" style="max-width:100%;"><br><em>Gauche</em></td>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_right.png" alt="Vue de droite" style="max-width:100%;"><br><em>Droite</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img loading="lazy" src="/images/suckless-ogl/ref_front.webp" alt="Vue de face" style="max-width:100%;"><br><em>Face</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img loading="lazy" src="/images/suckless-ogl/ref_left.webp" alt="Vue de gauche" style="max-width:100%;"><br><em>Gauche</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img loading="lazy" src="/images/suckless-ogl/ref_right.webp" alt="Vue de droite" style="max-width:100%;"><br><em>Droite</em></td>
 </tr>
 <tr>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_top.png" alt="Vue du dessus" style="max-width:100%;"><br><em>Dessus</em></td>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_bottom.png" alt="Vue du dessous" style="max-width:100%;"><br><em>Dessous</em></td>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_front_sony_a7siii.png" alt="Profil Sony A7S III" style="max-width:100%;"><br><em>Sony A7S III</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img loading="lazy" src="/images/suckless-ogl/ref_top.webp" alt="Vue du dessus" style="max-width:100%;"><br><em>Dessus</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img loading="lazy" src="/images/suckless-ogl/ref_bottom.webp" alt="Vue du dessous" style="max-width:100%;"><br><em>Dessous</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img loading="lazy" src="/images/suckless-ogl/ref_front_sony_a7siii.webp" alt="Profil Sony A7S III" style="max-width:100%;"><br><em>Sony A7S III</em></td>
 </tr>
 </table>
 
 <hr>
 <h2 id="pipeline-de-donnees-global">Pipeline de données global</h2>
-<pre class="mermaid">
+<pre class="mermaid" data-lazy-svg><template>
 graph TD
     POLL("① CPU — glfwPollEvents()") --> TIME("② CPU — Calcul Δt")
     TIME --> CAM("③ CPU — Physique caméra 60Hz")
@@ -1572,7 +1567,7 @@ graph TD
     class FBO,SKY,SPHERES gpu
     class BLOOM,COMP postfx
     class UI,SWAP subsystem
-</pre>
+</template></pre>
 
 <hr>
 <h2 id="glossaire">Glossaire</h2>
@@ -2393,5 +2388,24 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
 }
 </script>
 <script src="/js/glossary-tooltip.js"></script>
+<script>
+(function(){
+  var pres=document.querySelectorAll('pre.mermaid[data-lazy-svg]');
+  if(!pres.length) return;
+  function reveal(pre){
+    var t=pre.querySelector('template');
+    if(t){pre.replaceChild(t.content,t);pre.removeAttribute('data-lazy-svg');}
+  }
+  if(!('IntersectionObserver' in window)){
+    pres.forEach(reveal);return;
+  }
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){reveal(e.target);io.unobserve(e.target);}
+    });
+  },{rootMargin:'400px'});
+  pres.forEach(function(p){io.observe(p);});
+})();
+</script>
 </body>
 </html>
