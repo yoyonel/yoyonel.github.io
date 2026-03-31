@@ -2,8 +2,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="HandheldFriendly" content="True" />
@@ -31,15 +29,21 @@
   <link rel="stylesheet" type="text/css" href="https://yoyonel.github.io/theme/font-awesome/css/brands.css">
   <link rel="stylesheet" type="text/css" href="https://yoyonel.github.io/theme/font-awesome/css/solid.css">
 
-  <link rel="stylesheet" type="text/css" href="/css/custom.css">
 
-  <link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
-  <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
 
 
   <link href="https://yoyonel.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Bloggy le Blog Atom">
 
 
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-155727660-1', 'auto');
+  ga('send', 'pageview');
+</script>
 
 
 
@@ -67,7 +71,7 @@
 <aside>
   <div>
     <a href="https://yoyonel.github.io/">
-      <img loading="lazy" src="/images/avatar.gif" alt="Bloggy le Blog" title="Bloggy le Blog">
+      <img src="/images/avatar.gif" alt="Bloggy le Blog" title="Bloggy le Blog">
     </a>
 
     <h1>
@@ -136,7 +140,7 @@
   <div>
       <div><h1 id="anatomie-dune-frame-le-cycle-de-vie-complet-de-suckless-ogl">Anatomie d'une frame : le cycle de vie complet de suckless-ogl</h1>
 <p><em>De <code>main()</code> aux photons sur l'écran — une plongée complète dans un moteur <a href="#glossary-pbr" title="Physically-Based Rendering — modèle d'éclairage qui simule la physique réelle de la lumière">PBR</a> OpenGL moderne écrit en C.</em></p>
-<p><img loading="lazy" alt="Le rendu final de suckless-ogl — 100 sphères PBR éclairées par IBL" src="https://yoyonel.github.io/images/suckless-ogl/reference_image.webp">
+<p><img alt="Le rendu final de suckless-ogl — 100 sphères PBR éclairées par IBL" src="https://yoyonel.github.io/images/suckless-ogl/reference_image.png">
 <em><center>Le rendu final : 100 sphères métalliques et diélectriques, éclairées par une <a href="#glossary-hdr" title="High Dynamic Range — valeurs de couleur supérieures à 1.0 (lumière réaliste)">HDR</a> d'environnement, avec post-processing complet.</center></em></p>
 <hr>
 <h2 id="introduction">Introduction</h2>
