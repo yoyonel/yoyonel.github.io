@@ -164,7 +164,7 @@
   <div>
     <h1 id="anatomie-dune-frame-le-cycle-de-vie-complet-de-suckless-ogl">Anatomie d'une frame : le cycle de vie complet de suckless-ogl</h1>
 <p><em>De <code>main()</code> aux photons sur l'écran — une plongée complète dans un moteur <a href="#glossary-pbr" title="Physically-Based Rendering — modèle d'éclairage qui simule la physique réelle de la lumière">PBR</a> OpenGL moderne écrit en C.</em></p>
-<p><img alt="Le rendu final de suckless-ogl — 100 sphères PBR éclairées par IBL" src="https://yoyonel.github.io/images/suckless-ogl/reference_image.png">
+<p><img alt="Le rendu final de suckless-ogl — 100 sphères PBR éclairées par IBL" src="https://yoyonel.github.io/images/suckless-ogl/reference_image.webp">
 <em><center>Le rendu final : 100 sphères métalliques et diélectriques, éclairées par une <a href="#glossary-hdr" title="High Dynamic Range — valeurs de couleur supérieures à 1.0 (lumière réaliste)">HDR</a> d'environnement, avec post-processing complet.</center></em></p>
 <hr>
 <h2 id="introduction">Introduction</h2>
@@ -484,7 +484,7 @@ stateDiagram-v2
 <p>Le moteur supporte deux stratégies de rendu de sphères. Le <strong>mode par défaut</strong> est le <a href="#glossary-billboard" title="Quad (rectangle) toujours face à la caméra, utilisé ici comme surface de ray-tracing">billboard</a> <a href="#glossary-ray-tracing" title="Technique qui trace des rayons lumineux pour calculer l'intersection avec des objets">ray-tracing</a>.</p>
 <h4 id="mode-par-defaut-billboard-ray-tracing-par-pixel-billboard_mode-1">Mode par défaut : Billboard + Ray-Tracing par pixel (billboard_mode = 1)</h4>
 <p>Chaque sphère est rendue comme un <strong>simple <a href="#glossary-quad" title="Rectangle composé de 2 triangles — la primitive 2D de base">quad</a> aligné à l'écran</strong> (4 vertices, 2 triangles). Le fragment <a href="#glossary-shader" title="Programme exécuté directement sur le GPU (vertex, fragment, compute)">shader</a> effectue une <strong>intersection rayon-sphère analytique</strong> par pixel, produisant des sphères mathématiquement parfaites.</p>
-<p><img alt="Géométrie AABB du billboard — le quad projeté enveloppe la sphère à l'écran" src="https://yoyonel.github.io/images/suckless-ogl/billboard_aabb_geometry.png">
+<p><img alt="Géométrie AABB du billboard — le quad projeté enveloppe la sphère à l'écran" src="https://yoyonel.github.io/images/suckless-ogl/billboard_aabb_geometry.webp">
 <em><center>Le <a href="#glossary-vertex-shader" title="Shader qui traite chaque sommet de la géométrie (position, projection)">vertex shader</a> projette un quad serré autour de la <a href="#glossary-aabb" title="Axis-Aligned Bounding Box — boîte englobante alignée aux axes, pour le culling rapide">bounding box</a> à l'écran de la sphère via calcul de tangentes analytiques.</center></em></p>
 <p><strong>Avantages</strong> :</p>
 <ul>
@@ -1130,7 +1130,7 @@ graph TD
 </table>
 <h3 id="95-le-fragment-shader-billboard-intersection-rayon-sphere">9.5 — Le fragment shader billboard (intersection rayon-sphère)</h3>
 <p>Le <a href="#glossary-fragment-shader" title="Shader qui calcule la couleur de chaque pixel à l'écran">fragment shader</a> (<code>pbr_ibl_billboard.frag</code>) est là où la magie opère. Au lieu de <a href="#glossary-shader" title="Programme exécuté directement sur le GPU (vertex, fragment, compute)">shader</a> un <a href="#glossary-mesh" title="Ensemble de triangles formant un objet 3D">mesh</a> rastérisé, il <strong>intersecte analytiquement un rayon avec une sphère parfaite</strong> :</p>
-<p><img alt="Intersection rayon-sphère — le principe géométrique" src="https://yoyonel.github.io/images/suckless-ogl/sphere_intersection.jpg">
+<p><img alt="Intersection rayon-sphère — le principe géométrique" src="https://yoyonel.github.io/images/suckless-ogl/sphere_intersection.webp">
 <em><center>Intersection rayon-sphère analytique : le <a href="#glossary-discriminant" title="Valeur mathématique (b²−c) déterminant si un rayon touche une sphère">discriminant</a> détermine si le pixel touche la sphère.</center></em></p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Intersection rayon-sphère analytique</span>
 <span class="kt">vec3</span><span class="w"> </span><span class="n">oc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rayOrigin</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">center</span><span class="p">;</span>
@@ -1174,17 +1174,17 @@ graph TD
 </pre>
 
 <h4 id="anti-aliasing-analytique-des-bords">Anti-aliasing analytique des bords</h4>
-<p><img alt="Anti-aliasing analytique des sphères — smoothstep sur le discriminant" src="https://yoyonel.github.io/images/suckless-ogl/sphere_analytic_aa.jpg">
+<p><img alt="Anti-aliasing analytique des sphères — smoothstep sur le discriminant" src="https://yoyonel.github.io/images/suckless-ogl/sphere_analytic_aa.webp">
 <em><center>L'anti-aliasing analytique utilise le discriminant comme métrique de distance au bord — pas besoin de <a href="#glossary-msaa" title="Multisample Anti-Aliasing — anti-crénelage géométrique (coûteux, évité ici)">MSAA</a> pour des bords lisses.</center></em></p>
 <div class="highlight"><pre><span></span><code><span class="kt">float</span><span class="w"> </span><span class="n">pixelSizeWorld</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">clipW</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">proj</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">screenHeight</span><span class="p">);</span>
 <span class="kt">float</span><span class="w"> </span><span class="n">edgeFactor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">smoothstep</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">discriminant</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">radius</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">pixelSizeWorld</span><span class="p">));</span>
 <span class="n">FragColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">vec4</span><span class="p">(</span><span class="n">color</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">edgeFactor</span><span class="p">,</span><span class="w"> </span><span class="n">edgeFactor</span><span class="p">);</span><span class="w">  </span><span class="c1">// alpha prémultiplié</span>
 </code></pre></div>
 
-<p><img alt="Détail de l'anti-aliasing parfait des sphères" src="https://yoyonel.github.io/images/suckless-ogl/sphere_perfect_aa_detail.jpg">
+<p><img alt="Détail de l'anti-aliasing parfait des sphères" src="https://yoyonel.github.io/images/suckless-ogl/sphere_perfect_aa_detail.webp">
 <em><center>Détail en gros plan : les bords des sphères sont parfaitement lisses grâce au <a href="#glossary-ray-tracing" title="Technique qui trace des rayons lumineux pour calculer l'intersection avec des objets">ray-tracing</a> analytique.</center></em></p>
 <h4 id="projection-billboard">Projection billboard</h4>
-<p><img alt="Optimisation de projection AABB des sphères" src="https://yoyonel.github.io/images/suckless-ogl/sphere_aabb_optimization_projective.png">
+<p><img alt="Optimisation de projection AABB des sphères" src="https://yoyonel.github.io/images/suckless-ogl/sphere_aabb_optimization_projective.webp">
 <em><center>Le <a href="#glossary-vertex-shader" title="Shader qui traite chaque sommet de la géométrie (position, projection)">vertex shader</a> calcule un quad serré à l'écran via projection tangentielle analytique, gérant 3 cas : caméra dehors, dedans, ou derrière la sphère.</center></em></p>
 <hr>
 <h2 id="chapitre-10-pipeline-de-post-processing">Chapitre 10 — Pipeline de post-processing</h2>
@@ -1222,25 +1222,25 @@ graph TD
 <h3 id="102-galerie-des-effets-de-post-processing">10.2 — Galerie des effets de post-processing</h3>
 <p>Voici le rendu <strong>vue de face</strong> avec différents effets activés individuellement — chaque image montre l'effet isolé appliqué à la même scène :</p>
 <h4 id="sans-post-processing-brut">Sans post-processing (brut)</h4>
-<p><img alt="Rendu brut sans aucun post-processing" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_none.png">
+<p><img alt="Rendu brut sans aucun post-processing" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_none.webp">
 <em><center>Image brute en sortie du rendu <a href="#glossary-pbr" title="Physically-Based Rendering — modèle d'éclairage qui simule la physique réelle de la lumière">PBR</a> — pas de post-traitement appliqué.</center></em></p>
 <h4 id="fxaa-anti-aliasing-rapide">FXAA (anti-aliasing rapide)</h4>
-<p><img alt="Rendu avec FXAA activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_fxaa.png">
+<p><img alt="Rendu avec FXAA activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_fxaa.webp">
 <em><center><a href="#glossary-fxaa" title="Fast Approximate Anti-Aliasing — anti-crénelage rapide en post-process sur l'image finale">FXAA</a> (Fast Approximate Anti-Aliasing) — lisse les bords sans coût de <a href="#glossary-msaa" title="Multisample Anti-Aliasing — anti-crénelage géométrique (coûteux, évité ici)">MSAA</a>.</center></em></p>
 <h4 id="bloom">Bloom</h4>
-<p><img alt="Rendu avec Bloom activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_bloom.png">
+<p><img alt="Rendu avec Bloom activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_bloom.webp">
 <em><center><a href="#glossary-bloom" title="Effet de halo lumineux autour des zones très brillantes (diffusion lumineuse de l'objectif)">Bloom</a> — les zones lumineuses débordent, simulant la diffusion lumineuse d'un objectif.</center></em></p>
 <h4 id="depth-of-field-profondeur-de-champ">Depth of Field (Profondeur de champ)</h4>
-<p><img alt="Rendu avec Depth of Field activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_dof.png">
+<p><img alt="Rendu avec Depth of Field activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_dof.webp">
 <em><center>Profondeur de champ — les objets hors focus sont floutés comme avec un vrai objectif.</center></em></p>
 <h4 id="auto-exposure">Auto-Exposure</h4>
-<p><img alt="Rendu avec Auto-Exposure activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_auto_exposure.png">
+<p><img alt="Rendu avec Auto-Exposure activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_auto_exposure.webp">
 <em><center><a href="#glossary-auto-exposition" title="Adaptation automatique de la luminosité de la scène (simule l'iris de l'œil)">Auto-exposition</a> — le moteur adapte l'exposition comme l'œil humain s'adaptant à la luminosité.</center></em></p>
 <h4 id="motion-blur">Motion Blur</h4>
-<p><img alt="Rendu avec Motion Blur activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_motion_blur.png">
+<p><img alt="Rendu avec Motion Blur activé" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_subtle_motion_blur.webp">
 <em><center><a href="#glossary-motion-blur" title="Flou de mouvement par pixel simulant l'obturateur d'une caméra">Motion blur</a> par pixel — utilise les vecteurs de vélocité pour simuler le flou de mouvement cinématique.</center></em></p>
 <h4 id="profil-cinematique-sony-a7s-iii">Profil cinématique Sony A7S III</h4>
-<p><img alt="Rendu avec profil Sony A7S III" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_sony_a7siii.png">
+<p><img alt="Rendu avec profil Sony A7S III" src="https://yoyonel.github.io/images/suckless-ogl/ref_front_sony_a7siii.webp">
 <em><center>Profil photographique complet Sony A7S III — <a href="#glossary-color-grading" title="Ajustement créatif des couleurs (saturation, contraste, gamma, teinte)">color grading</a>, balance, exposition et LUT 3D combinés pour un rendu cinématique.</center></em></p>
 <h3 id="103-optimisation-shader-par-compilation-conditionnelle">10.3 — Optimisation shader par compilation conditionnelle</h3>
 <p>Le <a href="#glossary-fragment-shader" title="Shader qui calcule la couleur de chaque pixel à l'écran">fragment shader</a> post-process utilise des <strong>#define au compile-time</strong> pour éliminer les branches :</p>
@@ -1255,10 +1255,10 @@ graph TD
 
 <p>Un <strong>cache LRU de 32 entrées</strong> stocke les variantes compilées pour différentes combinaisons de flags d'effets. Changer d'effet déclenche une recompilation paresseuse uniquement à la première occurrence d'une nouvelle combinaison.</p>
 <h3 id="104-courbes-de-tonemapping">10.4 — Courbes de tonemapping</h3>
-<p><img alt="Courbes de tonemapping comparées" src="https://yoyonel.github.io/images/suckless-ogl/tonemapping_curves.png">
+<p><img alt="Courbes de tonemapping comparées" src="https://yoyonel.github.io/images/suckless-ogl/tonemapping_curves.webp">
 <em><center>Comparaison des courbes de <a href="#glossary-tonemapping" title="Conversion des couleurs HDR (illimitées) en LDR affichable (0–255)">tonemapping</a> disponibles — le passage de <a href="#glossary-hdr" title="High Dynamic Range — valeurs de couleur supérieures à 1.0 (lumière réaliste)">HDR</a> linéaire à LDR affichable.</center></em></p>
 <h3 id="105-adaptation-dexposition">10.5 — Adaptation d'exposition</h3>
-<p><img alt="Adaptation d'exposition au fil du temps" src="https://yoyonel.github.io/images/suckless-ogl/exposure_adaptation.jpg">
+<p><img alt="Adaptation d'exposition au fil du temps" src="https://yoyonel.github.io/images/suckless-ogl/exposure_adaptation.webp">
 <em><center>L'auto-exposition adapte progressivement la luminosité de la frame, comme l'iris de l'œil.</center></em></p>
 <hr>
 <h2 id="chapitre-11-la-premiere-frame-visible">Chapitre 11 — La première frame visible</h2>
@@ -1537,14 +1537,14 @@ graph TD
 <p>Le moteur supporte des captures automatisées depuis différents angles de caméra, utilisées pour les tests de régression visuelle :</p>
 <table style="width:100%; border-collapse:collapse; border:none;">
 <tr>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_front.png" alt="Vue de face" style="max-width:100%;"><br><em>Face</em></td>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_left.png" alt="Vue de gauche" style="max-width:100%;"><br><em>Gauche</em></td>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_right.png" alt="Vue de droite" style="max-width:100%;"><br><em>Droite</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_front.webp" alt="Vue de face" style="max-width:100%;"><br><em>Face</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_left.webp" alt="Vue de gauche" style="max-width:100%;"><br><em>Gauche</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_right.webp" alt="Vue de droite" style="max-width:100%;"><br><em>Droite</em></td>
 </tr>
 <tr>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_top.png" alt="Vue du dessus" style="max-width:100%;"><br><em>Dessus</em></td>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_bottom.png" alt="Vue du dessous" style="max-width:100%;"><br><em>Dessous</em></td>
-<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_front_sony_a7siii.png" alt="Profil Sony A7S III" style="max-width:100%;"><br><em>Sony A7S III</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_top.webp" alt="Vue du dessus" style="max-width:100%;"><br><em>Dessus</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_bottom.webp" alt="Vue du dessous" style="max-width:100%;"><br><em>Dessous</em></td>
+<td style="text-align:center; padding:8px; border:none;"><img src="/images/suckless-ogl/ref_front_sony_a7siii.webp" alt="Profil Sony A7S III" style="max-width:100%;"><br><em>Sony A7S III</em></td>
 </tr>
 </table>
 
